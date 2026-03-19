@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 DEFAULT_WORKING_DIR = Path(__file__).parent / "data" / "rag_storage"
+DEFAULT_SPLIT_BY_CHARACTER = "\n\n"
 
 
 # ---------------------------------------------------------------------------
@@ -33,16 +34,20 @@ def _select_text(doc: Dict[str, Any], prefer_llm_summary: bool) -> str:
 def _build_batches(
     documents: List[Dict[str, Any]],
     prefer_llm_summary: bool,
-) -> Tuple[List[str], List[str]]:
-    """Return (texts, ids) lists, filtering out blank documents."""
+) -> Tuple[List[str], List[str], List[str]]:
+    """Return (texts, ids, file_paths) lists, filtering out blank documents."""
     texts: List[str] = []
     ids: List[str] = []
+    file_paths: List[str] = []
     for doc in documents:
         text = _select_text(doc, prefer_llm_summary)
         if text.strip():
+            metadata = doc.get("metadata") or {}
+            source_url = metadata.get("wikipedia_url") or f"wikidata://{doc['qid']}"
             texts.append(text)
             ids.append(doc["qid"])
-    return texts, ids
+            file_paths.append(source_url)
+    return texts, ids, file_paths
 
 
 # ---------------------------------------------------------------------------
@@ -54,8 +59,10 @@ async def ingest_documents(
     working_dir: Optional[Path] = None,
     prefer_llm_summary: bool = False,
     batch_size: int = 4,
+    split_by_character: str = DEFAULT_SPLIT_BY_CHARACTER,
+    split_by_character_only: bool = False,
     llm_func: Optional[Callable] = None,
-    embed_func: Optional[Callable] = None,
+    embed_func: Optional[Any] = None,
 ) -> None:
     """
     Insert documents into LightRAG.
@@ -65,6 +72,8 @@ async def ingest_documents(
         working_dir:        LightRAG storage directory.  Defaults to data/rag_storage.
         prefer_llm_summary: Use ``llm_summary`` instead of ``text`` when available.
         batch_size:         Parallel insert concurrency (max recommended: 10).
+        split_by_character: Paragraph boundary used by LightRAG chunking. Default: "\\n\\n".
+        split_by_character_only: If True, split only by character boundary and skip token-aware fallback.
         llm_func:           Override default LLM function (gpt_4o_mini_complete).
         embed_func:         Override default embedding function (openai_embed).
     """
@@ -75,6 +84,9 @@ async def ingest_documents(
         print("LightRAG is not installed.  Run: pip install -e .[api]")
         return
 
+    llm_model_name: str = os.getenv("LLM_MODEL", "")
+    llm_model_kwargs: Dict[str, Any] = {}
+
     if llm_func is None or embed_func is None:
         binding = os.getenv("LLM_BINDING", "openai").lower()
         if binding == "ollama":
@@ -82,16 +94,23 @@ async def ingest_documents(
                 from functools import partial
                 from lightrag.llm.ollama import ollama_model_complete, ollama_embed
                 from lightrag.utils import EmbeddingFunc
+
+                async def _ollama_llm_wrapper(*args, **kwargs):
+                    # LightRAG may pass model in kwargs; ollama_model_complete already
+                    # resolves model from global config, so remove duplicate.
+                    kwargs.pop("model", None)
+                    return await ollama_model_complete(*args, **kwargs)
+
                 host = os.getenv("LLM_BINDING_HOST", "http://localhost:11434")
                 embed_host = os.getenv("EMBEDDING_BINDING_HOST", host)
                 if llm_func is None:
-                    llm_func = partial(
-                        ollama_model_complete,
-                        hashing_kv=None,
-                        host=host,
-                        model=os.getenv("LLM_MODEL", "qwen2.5:32b"),
-                        options={"num_ctx": int(os.getenv("LLM_CTX", "32768"))},
-                    )
+                    llm_func = _ollama_llm_wrapper
+                    llm_model_name = os.getenv("LLM_MODEL", "qwen2.5:7b")
+                    llm_model_kwargs = {
+                        "host": host,
+                        "options": {"num_ctx": int(os.getenv("OLLAMA_LLM_NUM_CTX", "8192"))},
+                        "timeout": int(os.getenv("LLM_TIMEOUT", "600")),
+                    }
                 if embed_func is None:
                     embed_func = EmbeddingFunc(
                         embedding_dim=int(os.getenv("EMBEDDING_DIM", "1024")),
@@ -126,13 +145,15 @@ async def ingest_documents(
     rag = LightRAG(
         working_dir=str(storage),
         llm_model_func=llm_func,
+        llm_model_name=llm_model_name,
+        llm_model_kwargs=llm_model_kwargs,
         embedding_func=embed_func,
         max_parallel_insert=batch_size,
     )
     await rag.initialize_storages()
 
     # ── Build text / id lists ─────────────────────────────────────────────────
-    texts, ids = _build_batches(documents, prefer_llm_summary)
+    texts, ids, file_paths = _build_batches(documents, prefer_llm_summary)
 
     if not texts:
         print("No non-empty documents to ingest.")
@@ -140,9 +161,18 @@ async def ingest_documents(
         return
 
     mode = "llm_summary" if prefer_llm_summary else "structured_text"
-    print(f"  Inserting {len(texts)} documents  (text mode: {mode}) …")
+    print(
+        f"  Inserting {len(texts)} documents  (text mode: {mode}, "
+        f"split_by={split_by_character!r}) ..."
+    )
 
-    await rag.ainsert(texts, ids=ids)
+    await rag.ainsert(
+        texts,
+        split_by_character=split_by_character,
+        split_by_character_only=split_by_character_only,
+        ids=ids,
+        file_paths=file_paths,
+    )
     await rag.finalize_storages()
 
     print(f"  Ingestion complete.  Storage: {storage}")
@@ -163,6 +193,8 @@ if __name__ == "__main__":
             return
         docs = json.loads(src.read_text(encoding="utf-8"))
         print(f"Loaded {len(docs)} documents for ingestion.")
-        await ingest_documents(docs)
+        split_by = os.getenv("LIGHTRAG_INGEST_SPLIT_BY_CHARACTER", DEFAULT_SPLIT_BY_CHARACTER)
+        split_only = os.getenv("LIGHTRAG_INGEST_SPLIT_BY_CHARACTER_ONLY", "false").lower() == "true"
+        await ingest_documents(docs, split_by_character=split_by, split_by_character_only=split_only)
 
     asyncio.run(_main())

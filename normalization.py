@@ -9,7 +9,7 @@ Converts structured entity JSON (produced by Phase 2 + 3) into:
 Design principles:
   - Pure functions; no side effects
   - Deterministic output for the same input
-  - Wikipedia extract is inserted verbatim when available
+    - Wikipedia chunked text is preferred; summary is fallback
   - Structured facts follow in a consistent order
 """
 from __future__ import annotations
@@ -39,17 +39,24 @@ def _join(vals: List[str], limit: Optional[int] = None) -> str:
 
 RENDERERS_EN: Dict[str, Any] = {
     "instance_of":             lambda n, v: f"{n} is a {_join(v, 3)}.",
+    "subclass_of":             lambda n, v: f"{n} is a subclass of {_join(v, 3)}.",
+    "part_of":                 lambda n, v: f"{n} is part of {_join(v, 3)}.",
+    "has_part":                lambda n, v: f"{n} includes {_join(v, 3)}.",
     "date_of_birth":           lambda n, v: f"{n} was born on {v[0]}.",
     "date_of_death":           lambda n, v: f"{n} died on {v[0]}.",
+    "start_time":              lambda n, v: f"{n} started on {v[0]}.",
+    "end_time":                lambda n, v: f"{n} ended on {v[0]}.",
     "place_of_birth":          lambda n, v: f"{n} was born in {_join(v, 2)}.",
     "place_of_death":          lambda n, v: f"{n} died in {_join(v, 2)}.",
     "country_of_citizenship":  lambda n, v: f"{n} is a citizen of {_join(v, 3)}.",
     "country_of_origin":       lambda n, v: f"{n} originates from {_join(v, 2)}.",
     "country":                 lambda n, v: f"{n} is associated with {_join(v, 2)}.",
     "occupation":              lambda n, v: f"{n}'s occupation: {_join(v, 5)}.",
+    "author":                  lambda n, v: f"Authored by {_join(v, 3)}.",
     "genre":                   lambda n, v: f"{n} works in the genre(s): {_join(v, 5)}.",
     "movement":                lambda n, v: f"{n} is part of the {_join(v, 3)} movement.",
     "award_received":          lambda n, v: f"{n} has received: {_join(v, 8)}.",
+    "official_language":       lambda n, v: f"Official language: {_join(v, 3)}.",
     "notable_work":            lambda n, v: f"Notable works: {_join(v, 5)}.",
     "record_label":            lambda n, v: f"{n} is signed to {_join(v, 3)}.",
     "director":                lambda n, v: f"Directed by {_join(v, 3)}.",
@@ -57,9 +64,18 @@ RENDERERS_EN: Dict[str, Any] = {
     "screenwriter":            lambda n, v: f"Written by {_join(v, 3)}.",
     "original_language":       lambda n, v: f"Original language: {_join(v)}.",
     "language_of_work":        lambda n, v: f"Language: {_join(v)}.",
+    "writing_system":          lambda n, v: f"Writing system: {_join(v, 3)}.",
+    "iso_639_1_code":          lambda n, v: f"ISO 639-1 code: {_join(v, 3)}.",
+    "iso_639_2_code":          lambda n, v: f"ISO 639-2 code: {_join(v, 3)}.",
+    "iso_639_3_code":          lambda n, v: f"ISO 639-3 code: {_join(v, 3)}.",
     "inception":               lambda n, v: f"{n} was established on {v[0]}.",
+    "founded_by":              lambda n, v: f"Founded by {_join(v, 3)}.",
     "located_in":              lambda n, v: f"{n} is located in {_join(v, 2)}.",
     "location":                lambda n, v: f"Location: {_join(v, 2)}.",
+    "headquarters_location":   lambda n, v: f"Headquarters: {_join(v, 2)}.",
+    "place_of_publication":    lambda n, v: f"Place of publication: {_join(v, 3)}.",
+    "coordinate_location":     lambda n, v: f"Coordinates: {v[0]}.",
+    "official_website":        lambda n, v: f"Official website: {_join(v, 2)}.",
     "member_of":               lambda n, v: f"{n} is a member of {_join(v, 3)}.",
     "educated_at":             lambda n, v: f"{n} was educated at {_join(v, 3)}.",
     "employer":                lambda n, v: f"{n} worked for {_join(v, 3)}.",
@@ -72,21 +88,29 @@ RENDERERS_EN: Dict[str, Any] = {
     "creator":                 lambda n, v: f"Created by {_join(v, 3)}.",
     "publisher":               lambda n, v: f"Published by {_join(v, 3)}.",
     "publication_date":        lambda n, v: f"{n} was published on {v[0]}.",
+    "main_subject":            lambda n, v: f"Main subject: {_join(v, 5)}.",
 }
 
 RENDERERS_MK: Dict[str, Any] = {
     "instance_of":             lambda n, v: f"{n} е {_join(v, 3)}.",
+    "subclass_of":             lambda n, v: f"{n} е подкласа на {_join(v, 3)}.",
+    "part_of":                 lambda n, v: f"{n} е дел од {_join(v, 3)}.",
+    "has_part":                lambda n, v: f"{n} вклучува {_join(v, 3)}.",
     "date_of_birth":           lambda n, v: f"{n} е роден/а на {v[0]}.",
     "date_of_death":           lambda n, v: f"{n} почина на {v[0]}.",
+    "start_time":              lambda n, v: f"{n} започнал/а на {v[0]}.",
+    "end_time":                lambda n, v: f"{n} завршил/а на {v[0]}.",
     "place_of_birth":          lambda n, v: f"{n} е роден/а во {_join(v, 2)}.",
     "place_of_death":          lambda n, v: f"{n} почина во {_join(v, 2)}.",
     "country_of_citizenship":  lambda n, v: f"{n} е државјанин/ка на {_join(v, 3)}.",
     "country_of_origin":       lambda n, v: f"{n} потекнува од {_join(v, 2)}.",
     "country":                 lambda n, v: f"{n} е поврзан/а со {_join(v, 2)}.",
     "occupation":              lambda n, v: f"Занимање на {n}: {_join(v, 5)}.",
+    "author":                  lambda n, v: f"Автор: {_join(v, 3)}.",
     "genre":                   lambda n, v: f"{n} работи во жанр(ови): {_join(v, 5)}.",
     "movement":                lambda n, v: f"{n} припаѓа на движењето {_join(v, 3)}.",
     "award_received":          lambda n, v: f"{n} добил/а: {_join(v, 8)}.",
+    "official_language":       lambda n, v: f"Официјален јазик: {_join(v, 3)}.",
     "notable_work":            lambda n, v: f"Значајни дела: {_join(v, 5)}.",
     "record_label":            lambda n, v: f"{n} е потпишан/а за {_join(v, 3)}.",
     "director":                lambda n, v: f"Режирано од {_join(v, 3)}.",
@@ -94,9 +118,18 @@ RENDERERS_MK: Dict[str, Any] = {
     "screenwriter":            lambda n, v: f"Напишано од {_join(v, 3)}.",
     "original_language":       lambda n, v: f"Оригинален јазик: {_join(v)}.",
     "language_of_work":        lambda n, v: f"Јазик: {_join(v)}.",
+    "writing_system":          lambda n, v: f"Писмо: {_join(v, 3)}.",
+    "iso_639_1_code":          lambda n, v: f"ISO 639-1 код: {_join(v, 3)}.",
+    "iso_639_2_code":          lambda n, v: f"ISO 639-2 код: {_join(v, 3)}.",
+    "iso_639_3_code":          lambda n, v: f"ISO 639-3 код: {_join(v, 3)}.",
     "inception":               lambda n, v: f"{n} е основан/а на {v[0]}.",
+    "founded_by":              lambda n, v: f"Основано од {_join(v, 3)}.",
     "located_in":              lambda n, v: f"{n} се наоѓа во {_join(v, 2)}.",
     "location":                lambda n, v: f"Локација: {_join(v, 2)}.",
+    "headquarters_location":   lambda n, v: f"Седиште: {_join(v, 2)}.",
+    "place_of_publication":    lambda n, v: f"Место на издавање: {_join(v, 3)}.",
+    "coordinate_location":     lambda n, v: f"Координати: {v[0]}.",
+    "official_website":        lambda n, v: f"Официјална веб-страница: {_join(v, 2)}.",
     "member_of":               lambda n, v: f"{n} е член на {_join(v, 3)}.",
     "educated_at":             lambda n, v: f"{n} се школувал/а на {_join(v, 3)}.",
     "employer":                lambda n, v: f"{n} работел/а за {_join(v, 3)}.",
@@ -109,6 +142,7 @@ RENDERERS_MK: Dict[str, Any] = {
     "creator":                 lambda n, v: f"Создадено од {_join(v, 3)}.",
     "publisher":               lambda n, v: f"Издадено од {_join(v, 3)}.",
     "publication_date":        lambda n, v: f"{n} е издаден/а на {v[0]}.",
+    "main_subject":            lambda n, v: f"Главна тема: {_join(v, 5)}.",
 }
 
 # Keep old name as alias so any external code referencing RENDERERS still works
@@ -129,12 +163,12 @@ def build_document(entity: Dict[str, Any], lang: str = "en") -> Tuple[str, Dict[
         entity: Structured entity dict from Phase 2/3.
         lang:   ``"en"`` (default) or ``"mk"`` – controls which label,
                 description, and sentence templates are used.
-                The Wikipedia extract is always inserted verbatim regardless
-                of this setting (it is already in the best available language).
+                Wikipedia text is inserted verbatim regardless of this setting
+                (already fetched in the best available language).
 
     text_paragraph structure:
         1. Heading sentence  (name + description)
-        2. Wikipedia extract (if available)
+        2. Wikipedia chunked text when available; otherwise summary extract
         3. Structured fact sentences (one per property, in ``lang``)
 
     metadata is language-independent (always contains both label_mk and label_en).
@@ -156,7 +190,10 @@ def build_document(entity: Dict[str, Any], lang: str = "en") -> Tuple[str, Dict[
         fallback_sentence = f"{name} is a cultural entity from North Macedonia."
 
     props: Dict[str, List[str]] = entity.get("properties", {})
-    wiki_extract: str = entity.get("wikipedia_extract", "")
+    wiki_chunks: List[str] = entity.get("wikipedia_chunks") or []
+    wiki_text: str = "\n\n".join(wiki_chunks) if wiki_chunks else (
+        entity.get("wikipedia_full_text") or entity.get("wikipedia_extract", "")
+    )
 
     lines: List[str] = []
 
@@ -166,10 +203,10 @@ def build_document(entity: Dict[str, Any], lang: str = "en") -> Tuple[str, Dict[
     else:
         lines.append(fallback_sentence)
 
-    # ── 2. Wikipedia extract ─────────────────────────────────────────────────
-    if wiki_extract:
+    # ── 2. Wikipedia text (full preferred, summary fallback) ────────────────
+    if wiki_text:
         lines.append("")
-        lines.append(wiki_extract)
+        lines.append(wiki_text)
 
     # ── 3. Structured facts ───────────────────────────────────────────────────
     lines.append("")
@@ -202,10 +239,18 @@ def build_document(entity: Dict[str, Any], lang: str = "en") -> Tuple[str, Dict[
         "description":     entity.get("description_en") or entity.get("description_mk"),
         "instance_of":     instance_types[:3],
         "country":         country[:1],
-        "has_wikipedia":   bool(wiki_extract),
+        "has_wikipedia":   bool(wiki_text),
         "wikipedia_source": entity.get("wikipedia_source"),
+        "wikipedia_title": entity.get("wikipedia_title"),
+        "wikipedia_pageid": entity.get("wikipedia_pageid"),
+        "wikipedia_url":   entity.get("wikipedia_url"),
+        "wikipedia_lang":  entity.get("wikipedia_lang"),
+        "wikipedia_chunk_count": len(wiki_chunks),
+        "wikipedia_chunk_size": entity.get("wikipedia_chunk_size"),
+        "wikipedia_chunk_overlap": entity.get("wikipedia_chunk_overlap"),
+        "wikipedia_text_chars": len(wiki_text),
         "text_lang":       lang,
-        "source":          "wikidata",
+        "source":          "wikidata+wikipedia",
     }
 
     return text, metadata

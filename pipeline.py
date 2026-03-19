@@ -17,7 +17,7 @@ be resumed without re-running earlier ones.
 Usage examples
 --------------
   python pipeline.py                       # full run, all phases
-  python pipeline.py --skip-summarize      # skip Phase 5 (LLM cost)
+    python pipeline.py --run-summarize       # include Phase 5 (LLM cost)
   python pipeline.py --from-phase 3        # resume from Wikipedia fetch
   python pipeline.py --limit 100           # faster test run
   python pipeline.py --from-phase 6        # re-ingest existing documents
@@ -29,6 +29,7 @@ import asyncio
 import json
 import os
 from pathlib import Path
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Intermediate artefact paths
@@ -44,12 +45,12 @@ NORMALIZED_DOCS_FILE  = DATA_DIR / "normalized_documents.json"
 # JSON persistence helpers
 # ---------------------------------------------------------------------------
 
-def _save(path: Path, data: object) -> None:
+def _save(path: Path, data: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
-def _load(path: Path) -> object:
+def _load(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -140,7 +141,7 @@ async def phase6_ingest(docs: list, prefer_llm_summary: bool) -> None:
 # Resumable loader helpers
 # ---------------------------------------------------------------------------
 
-def _require(path: Path, label: str) -> object:
+def _require(path: Path, label: str) -> Any:
     if not path.exists():
         raise FileNotFoundError(
             f"{path} not found – run the pipeline from an earlier phase first.\n"
@@ -157,7 +158,7 @@ def _require(path: Path, label: str) -> object:
 
 async def main(args: argparse.Namespace) -> None:
     start = args.from_phase
-    skip_summarize = args.skip_summarize
+    run_summarize = args.run_summarize
     limit = args.limit
 
     lang = args.lang
@@ -166,7 +167,7 @@ async def main(args: argparse.Namespace) -> None:
     print(f"  Start phase : {start}")
     print(f"  Limit/cat   : {limit}")
     print(f"  Text lang   : {lang}")
-    print(f"  Summarize   : {'no' if skip_summarize else 'yes (Phase 5)'}")
+    print(f"  Summarize   : {'yes (Phase 5)' if run_summarize else 'no (default)'}")
 
     # ── Phase 1: Discovery ────────────────────────────────────────────────────
     if start <= 1:
@@ -193,12 +194,12 @@ async def main(args: argparse.Namespace) -> None:
         docs = _require(NORMALIZED_DOCS_FILE, "normalized documents")
 
     # ── Phase 5: LLM Summarization (optional) ────────────────────────────────
-    if not skip_summarize and start <= 5:
+    if run_summarize and start <= 5:
         docs = await phase5_summarize(docs)
 
     # ── Phase 6: LightRAG Ingestion ───────────────────────────────────────────
     if start <= 6:
-        await phase6_ingest(docs, prefer_llm_summary=not skip_summarize)
+        await phase6_ingest(docs, prefer_llm_summary=run_summarize)
 
     print("\nPipeline complete.")
 
@@ -218,8 +219,8 @@ if __name__ == "__main__":
         help="Resume from phase N (1–6).  Default: 1 (full run).",
     )
     parser.add_argument(
-        "--skip-summarize", action="store_true",
-        help="Skip Phase 5 (LLM summarization) – saves API cost.",
+        "--run-summarize", action="store_true",
+        help="Run Phase 5 (LLM summarization). Default is OFF to reduce cost.",
     )
     parser.add_argument(
         "--limit", type=int, default=500, metavar="N",

@@ -2,15 +2,17 @@
 Phase 5 – Optional LLM Summarization
 =======================================
 
-Sends the structured factual document to an LLM and requests a compact,
-encyclopedia-style narrative summary.
+Optionally compresses a normalized document into a compact narrative summary.
+This phase is NOT required for ingestion when chunked deterministic text from
+Phase 4 is used directly.
 
 Stored separately from the structured paragraph:
   - ``text``        →  deterministic factual text (Phase 4)
   - ``llm_summary`` →  LLM narrative (Phase 5, optional)
 
-Best practice: embed only one of the two.  The structured text is safer when
-cost matters; the LLM summary reads more naturally for end-users.
+Best practice with chunked ingestion:
+    - Use ``text`` for retrieval quality and lower hallucination risk
+    - Use ``llm_summary`` mainly for UI display or quick previews
 """
 from __future__ import annotations
 
@@ -27,6 +29,8 @@ SYSTEM_PROMPT = (
     "Your summaries are factual, third-person, and encyclopedic. "
     "You never add information that is not present in the provided facts."
 )
+
+SUMMARY_INPUT_MAX_CHARS = int(os.getenv("LIGHTRAG_SUMMARY_INPUT_MAX_CHARS", "9000"))
 
 USER_TEMPLATE = """\
 Below are structured facts about a cultural entity from North Macedonia.
@@ -48,17 +52,33 @@ SUMMARY:"""
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _truncate(text: str, max_chars: int) -> str:
+    if len(text) <= max_chars:
+        return text
+    return text[:max_chars].rstrip() + "\n\n[TRUNCATED FOR SUMMARIZATION INPUT]"
+
+
 def _doc_to_facts(doc: Dict[str, Any]) -> str:
-    """Format a document dict as a plain-text facts block for the LLM prompt."""
+    """Format one normalized document as bounded facts for summarization."""
     meta = doc.get("metadata", {})
     label = meta.get("label_en") or meta.get("label_mk") or doc["qid"]
     body = doc.get("text", "")
-    return f"Entity: {label}\n\n{body}"
+    wiki_chunk_count = meta.get("wikipedia_chunk_count", 0)
+    wiki_lang = meta.get("wikipedia_lang") or "unknown"
+    body = _truncate(body, SUMMARY_INPUT_MAX_CHARS)
+    return (
+        f"Entity: {label}\n"
+        f"QID: {doc['qid']}\n"
+        f"Wikipedia language: {wiki_lang}\n"
+        f"Wikipedia chunks: {wiki_chunk_count}\n\n"
+        f"{body}"
+    )
 
 
 async def _call_llm(prompt: str, llm_func: Callable) -> Optional[str]:
     """Call the LLM with a single prompt string; handle both plain-text and message responses."""
-    result = await llm_func(prompt)
+    combined_prompt = f"{SYSTEM_PROMPT}\n\n{prompt}"
+    result = await llm_func(combined_prompt)
     if isinstance(result, str):
         return result.strip() or None
     # Handle ChatCompletion-style objects
@@ -88,6 +108,8 @@ async def summarize_document(
         Summary string, or None on failure.
     """
     facts = _doc_to_facts(doc)
+    if not facts.strip():
+        return None
     prompt = USER_TEMPLATE.format(facts=facts)
     try:
         return await _call_llm(prompt, llm_func)

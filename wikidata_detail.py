@@ -22,27 +22,49 @@ REQUEST_DELAY = 1.0
 
 HEADERS = {"User-Agent": "MacedonianCulturePipeline/1.0 (research@example.com)"}
 
+# Language behavior in this module:
+# - We always request both Macedonian and English from Wikidata ("mk|en").
+# - For labels/descriptions we prefer mk when available, then fall back to en.
+# - This keeps entities usable even when one language is missing.
+
 # ---------------------------------------------------------------------------
 # Property map  (Wikidata PID → friendly key used throughout the pipeline)
 # ---------------------------------------------------------------------------
 PROPERTY_MAP: Dict[str, str] = {
     "P31":   "instance_of",
+    "P279":  "subclass_of",
+    "P361":  "part_of",
+    "P527":  "has_part",
     "P21":   "sex_or_gender",
     "P27":   "country_of_citizenship",
     "P106":  "occupation",
     "P136":  "genre",
+    "P50":   "author",
     "P569":  "date_of_birth",
     "P570":  "date_of_death",
+    "P580":  "start_time",
+    "P582":  "end_time",
     "P19":   "place_of_birth",
     "P20":   "place_of_death",
     "P166":  "award_received",
     "P135":  "movement",
+    "P37":   "official_language",
     "P364":  "original_language",
+    "P282":  "writing_system",
+    "P218":  "iso_639_1_code",
+    "P219":  "iso_639_2_code",
+    "P220":  "iso_639_3_code",
     "P495":  "country_of_origin",
     "P17":   "country",
     "P571":  "inception",
+    "P112":  "founded_by",
     "P131":  "located_in",
     "P276":  "location",
+    "P159":  "headquarters_location",
+    "P291":  "place_of_publication",
+    "P625":  "coordinate_location",
+    "P18":   "image",
+    "P856":  "official_website",
     "P264":  "record_label",
     "P57":   "director",
     "P161":  "cast_member",
@@ -64,13 +86,13 @@ PROPERTY_MAP: Dict[str, str] = {
     "P710":  "participant",
     "P123":  "publisher",
     "P577":  "publication_date",
+    "P921":  "main_subject",
 }
 
 
 # ---------------------------------------------------------------------------
 # Low-level API helpers
 # ---------------------------------------------------------------------------
-
 def _api_get(params: dict) -> dict:
     resp = requests.get(
         WIKIDATA_API,
@@ -84,6 +106,7 @@ def _api_get(params: dict) -> dict:
 
 def _get_label(entity_data: dict, lang: str = "mk") -> Optional[str]:
     labels = entity_data.get("labels", {})
+    # labels look like: {"mk": {"value": "..."}, "en": {"value": "..."}}
     if lang in labels:
         return labels[lang]["value"]
     if "en" in labels:
@@ -93,6 +116,7 @@ def _get_label(entity_data: dict, lang: str = "mk") -> Optional[str]:
 
 def _get_description(entity_data: dict, lang: str = "mk") -> Optional[str]:
     descs = entity_data.get("descriptions", {})
+    # descriptions have the same language-keyed shape as labels.
     if lang in descs:
         return descs[lang]["value"]
     if "en" in descs:
@@ -101,7 +125,19 @@ def _get_description(entity_data: dict, lang: str = "mk") -> Optional[str]:
 
 
 def _resolve_value(snak: dict, labels_cache: dict) -> Optional[str]:
-    """Extract a human-readable string from a single Wikidata snak."""
+    """
+    Extract a human-readable string from one Wikidata snak.
+
+    What is a snak?
+    - In Wikidata, each claim value is carried in a "snak" object.
+    - A snak stores the value type and raw value payload (for example entity id,
+      time, quantity, coordinate, plain string).
+
+    Why this function exists:
+    - Wikidata claim values are heterogeneous and nested.
+    - We normalize supported snak datatypes to simple strings so downstream
+      pipeline steps can consume one consistent representation.
+    """
     if snak.get("snaktype") != "value":
         return None
 
@@ -110,13 +146,14 @@ def _resolve_value(snak: dict, labels_cache: dict) -> Optional[str]:
 
     if dt == "wikibase-entityid":
         qid = dv["value"]["id"]
+        # Entity-valued claims are converted from QID to readable label.
         return labels_cache.get(qid, qid)  # fall back to raw QID if label missing
 
     if dt == "string":
         return dv["value"]
 
     if dt == "time":
-        # "+YYYY-MM-DDT00:00:00Z"  →  "YYYY-MM-DD"
+        # "+YYYY-MM-DDT00:00:00Z"  -> "YYYY-MM-DD"
         raw: str = dv["value"]["time"]
         return raw.lstrip("+").split("T")[0]
 
@@ -144,6 +181,9 @@ def _collect_value_qids(entities_raw: dict) -> List[str]:
     for entity_data in entities_raw.values():
         if not isinstance(entity_data, dict):
             continue
+        # claims shape per property id (PID):
+        # claims["P31"] = [claim_obj, claim_obj, ...]
+        # each claim_obj carries mainsnak with the actual value.
         for pid in PROPERTY_MAP:
             for claim in entity_data.get("claims", {}).get(pid, []):
                 snak = claim.get("mainsnak", {})
@@ -186,11 +226,30 @@ def _batch_fetch_labels(qids: List[str]) -> Dict[str, str]:
 def fetch_entities_batch(qids: List[str]) -> Dict[str, Any]:
     """
     Fetch full entity data for up to BATCH_SIZE QIDs.
-    Returns {qid: structured_dict}.
+        Returns {qid: structured_dict}.
+
+        Output shape (per entity):
+        {
+            "Q42": {
+                "qid": "Q42",
+                "label_mk": "...",
+                "label_en": "...",
+                "description_mk": "...",
+                "description_en": "...",
+                "sitelinks": {"mkwiki": "...", "enwiki": "..."},
+                "properties": {"instance_of": ["human"], "occupation": ["writer"]}
+            }
+        }
     """
     data = _api_get({
         "action": "wbgetentities",
         "ids": "|".join(qids),
+                # Why these fields:
+                # - labels/descriptions: canonical display text in mk/en
+                # - claims: structured facts (occupation, country, dates, etc.)
+                # - sitelinks: wiki page titles for mk/en article linkage
+                # So a sitelink is not part of the structured “facts” about the entity,
+                #  it’s more like a pointer to its encyclopedia page
         "props": "labels|descriptions|claims|sitelinks",
         "languages": "mk|en",
         "sitefilter": "mkwiki|enwiki",
@@ -208,15 +267,18 @@ def fetch_entities_batch(qids: List[str]) -> Dict[str, Any]:
 
         structured: Dict[str, Any] = {
             "qid": qid,
+            # labels/descriptions are language-specific text fields.
             "label_mk": _get_label(ent, "mk"),
             "label_en": _get_label(ent, "en"),
             "description_mk": _get_description(ent, "mk"),
             "description_en": _get_description(ent, "en"),
+            # sitelinks are article titles keyed by wiki site id.
             "sitelinks": {
                 k: v["title"]
                 for k, v in ent.get("sitelinks", {}).items()
                 if k in ("mkwiki", "enwiki")
             },
+            # properties is our normalized view of selected Wikidata claims.
             "properties": {},
         }
 
