@@ -18,7 +18,11 @@ from __future__ import annotations
 
 import asyncio
 import os
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = REPO_ROOT / "data"
 
 # ---------------------------------------------------------------------------
 # Prompt template
@@ -164,7 +168,6 @@ async def summarize_all(
 
 if __name__ == "__main__":
     import json
-    import pathlib
 
     async def _main() -> None:
         if not os.getenv("OPENAI_API_KEY"):
@@ -176,9 +179,9 @@ if __name__ == "__main__":
             print("LightRAG is not installed.")
             return
 
-        src = pathlib.Path("data/normalized_documents.json")
+        src = DATA_DIR / "normalized_documents.json"
         if not src.exists():
-            print("Run normalization.py first.")
+            print(f"Run normalization.py first to generate {src}.")
             return
 
         docs = json.loads(src.read_text(encoding="utf-8"))

@@ -35,7 +35,8 @@ from typing import Any
 # Intermediate artefact paths
 # ---------------------------------------------------------------------------
 
-DATA_DIR              = Path(__file__).parent / "data"
+REPO_ROOT             = Path(__file__).resolve().parent.parent
+DATA_DIR              = REPO_ROOT / "data"
 DISCOVERED_QIDS_FILE  = DATA_DIR / "discovered_qids.json"
 ENTITY_DETAILS_FILE   = DATA_DIR / "entity_details.json"
 NORMALIZED_DOCS_FILE  = DATA_DIR / "normalized_documents.json"

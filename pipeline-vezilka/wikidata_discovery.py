@@ -10,6 +10,7 @@ North Macedonia = Q221
 from __future__ import annotations
 
 import time
+from pathlib import Path
 from typing import Any, Dict, List
 
 import requests
@@ -18,6 +19,9 @@ SPARQL_ENDPOINT = "https://query.wikidata.org/sparql"
 NORTH_MACEDONIA_QID = "Q221"
 REQUEST_DELAY = 2.0
 LIMIT_PER_CATEGORY = 1
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = REPO_ROOT / "data"
 
 # QID: This is a Wikidata unique identifier for any item/entity.
 # Example: Q221 = North Macedonia, Q5 = human, Q639669 = musician.
@@ -195,10 +199,9 @@ def discover_entities(limit_per_category: int = LIMIT_PER_CATEGORY) -> List[str]
 
 if __name__ == "__main__":
     import json
-    import pathlib
 
     qids = discover_entities()
-    out = pathlib.Path("data/discovered_qids.json")
+    out = DATA_DIR / "discovered_qids.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(qids, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"\nSaved {len(qids)} QIDs → {out}")

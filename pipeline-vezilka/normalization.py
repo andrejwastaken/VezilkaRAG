@@ -14,7 +14,11 @@ Design principles:
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = REPO_ROOT / "data"
 
 
 # ---------------------------------------------------------------------------
@@ -291,7 +295,6 @@ def normalize_all(
 
 if __name__ == "__main__":
     import json
-    import pathlib
 
     import argparse
     parser = argparse.ArgumentParser(description="Normalize entity details into RAG documents.")
@@ -299,13 +302,13 @@ if __name__ == "__main__":
                         help="Language for sentence templates (default: en).")
     args = parser.parse_args()
 
-    src = pathlib.Path("data/entity_details.json")
+    src = DATA_DIR / "entity_details.json"
     if not src.exists():
-        print("Run wikidata_detail.py (and optionally wikipedia_fetch.py) first.")
+        print(f"Run wikidata_detail.py (and optionally wikipedia_fetch.py) first to generate {src}.")
     else:
         entities = json.loads(src.read_text(encoding="utf-8"))
         docs = normalize_all(entities, lang=args.lang)
-        out = pathlib.Path("data/normalized_documents.json")
+        out = DATA_DIR / "normalized_documents.json"
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(docs, indent=2, ensure_ascii=False), encoding="utf-8")
         print(f"Normalized {len(docs)} documents (lang={args.lang}) → {out}")

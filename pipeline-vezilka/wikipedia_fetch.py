@@ -16,6 +16,7 @@ import os
 import re
 import time
 import urllib.parse
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 import requests
@@ -36,6 +37,9 @@ CHUNK_SIZE_TOKENS = int(os.getenv("LIGHTRAG_WIKI_CHUNK_TOKENS", str(DEFAULT_CHUN
 CHUNK_OVERLAP_TOKENS = int(
     os.getenv("LIGHTRAG_WIKI_CHUNK_OVERLAP_TOKENS", str(DEFAULT_CHUNK_OVERLAP_TOKENS))
 )
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = REPO_ROOT / "data"
 
 REQUEST_DELAY = 0.5  # seconds between requests  (polite crawling)
 HEADERS = {"User-Agent": "MacedonianCulturePipeline/1.0 (research@example.com)"}
@@ -321,11 +325,10 @@ def enrich_with_wikipedia(
 
 if __name__ == "__main__":
     import json
-    import pathlib
 
-    path = pathlib.Path("data/entity_details.json")
+    path = DATA_DIR / "entity_details.json"
     if not path.exists():
-        print("Run wikidata_detail.py first to generate data/entity_details.json.")
+        print(f"Run wikidata_detail.py first to generate {path}.")
     else:
         entities = json.loads(path.read_text(encoding="utf-8"))
         entities = enrich_with_wikipedia(entities)

@@ -16,7 +16,9 @@ import os
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-DEFAULT_WORKING_DIR = Path(__file__).parent / "data" / "rag_storage"
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = REPO_ROOT / "data"
+DEFAULT_WORKING_DIR = DATA_DIR / "rag_storage"
 DEFAULT_SPLIT_BY_CHARACTER = "\n\n"
 
 
@@ -184,12 +186,11 @@ async def ingest_documents(
 
 if __name__ == "__main__":
     import json
-    import pathlib
 
     async def _main() -> None:
-        src = pathlib.Path("data/normalized_documents.json")
+        src = DATA_DIR / "normalized_documents.json"
         if not src.exists():
-            print("Run normalization.py first to generate data/normalized_documents.json.")
+            print(f"Run normalization.py first to generate {src}.")
             return
         docs = json.loads(src.read_text(encoding="utf-8"))
         print(f"Loaded {len(docs)} documents for ingestion.")

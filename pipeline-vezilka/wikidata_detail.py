@@ -12,6 +12,7 @@ Batch size: up to 50 IDs per request (Wikidata hard limit).
 from __future__ import annotations
 
 import time
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import requests
@@ -19,6 +20,9 @@ import requests
 WIKIDATA_API = "https://www.wikidata.org/w/api.php"
 BATCH_SIZE = 50
 REQUEST_DELAY = 1.0
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = REPO_ROOT / "data"
 
 HEADERS = {"User-Agent": "MacedonianCulturePipeline/1.0 (research@example.com)"}
 
@@ -329,16 +333,15 @@ def fetch_all_entities(
 
 if __name__ == "__main__":
     import json
-    import pathlib
 
-    qids_path = pathlib.Path("data/discovered_qids.json")
+    qids_path = DATA_DIR / "discovered_qids.json"
     if not qids_path.exists():
-        print("Run wikidata_discovery.py first to generate data/discovered_qids.json.")
+        print(f"Run wikidata_discovery.py first to generate {qids_path}.")
     else:
         qids = json.loads(qids_path.read_text(encoding="utf-8"))
         print(f"Fetching details for {len(qids)} QIDs …")
         result = fetch_all_entities(qids)
-        out = pathlib.Path("data/entity_details.json")
+        out = DATA_DIR / "entity_details.json"
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
         print(f"Saved {len(result)} entities → {out}")
