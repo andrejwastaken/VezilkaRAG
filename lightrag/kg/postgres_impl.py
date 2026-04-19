@@ -4859,13 +4859,25 @@ class PGGraphStorage(BaseGraphStorage):
 
             for result in outgoing_results:
                 if result["node_id"] and result["connected_id"]:
-                    edges_norm[result["node_id"]].append(
+                    node_id = result["node_id"]
+                    if node_id not in edges_norm:
+                        logger.warning(
+                            f"[{self.workspace}] Node {node_id} not found in batch edge lookup map"
+                        )
+                        edges_norm[node_id] = []
+                    edges_norm[node_id].append(
                         (result["node_id"], result["connected_id"])
                     )
 
             for result in incoming_results:
                 if result["node_id"] and result["connected_id"]:
-                    edges_norm[result["node_id"]].append(
+                    node_id = result["node_id"]
+                    if node_id not in edges_norm:
+                        logger.warning(
+                            f"[{self.workspace}] Node {node_id} not found in batch edge lookup map"
+                        )
+                        edges_norm[node_id] = []
+                    edges_norm[node_id].append(
                         (result["connected_id"], result["node_id"])
                     )
 
