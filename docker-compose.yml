@@ -22,5 +22,6 @@ services:
     environment:
       WORKING_DIR: "/app/data/rag_storage"
       INPUT_DIR: "/app/data/inputs"
+      WORKSPACE: "${WORKSPACE:-main}"
       HOST: "0.0.0.0"
       PORT: "9621"

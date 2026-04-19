@@ -98,6 +98,7 @@ PROPERTY_MAP: Dict[str, str] = {
 # Low-level API helpers
 # ---------------------------------------------------------------------------
 def _api_get(params: dict) -> dict:
+    # Perform a Wikidata API request with shared defaults and return JSON.
     resp = requests.get(
         WIKIDATA_API,
         params={**params, "format": "json"},
@@ -109,6 +110,7 @@ def _api_get(params: dict) -> dict:
 
 
 def _get_label(entity_data: dict, lang: str = "mk") -> Optional[str]:
+    # Read label text in preferred language with English fallback.
     labels = entity_data.get("labels", {})
     # labels look like: {"mk": {"value": "..."}, "en": {"value": "..."}}
     if lang in labels:
@@ -119,6 +121,7 @@ def _get_label(entity_data: dict, lang: str = "mk") -> Optional[str]:
 
 
 def _get_description(entity_data: dict, lang: str = "mk") -> Optional[str]:
+    # Read description text in preferred language with English fallback.
     descs = entity_data.get("descriptions", {})
     # descriptions have the same language-keyed shape as labels.
     if lang in descs:

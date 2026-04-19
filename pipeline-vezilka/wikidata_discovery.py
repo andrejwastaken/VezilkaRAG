@@ -9,16 +9,17 @@ North Macedonia = Q221
 """
 from __future__ import annotations
 
+import os
 import time
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, Iterable, List
 
 import requests
 
 SPARQL_ENDPOINT = "https://query.wikidata.org/sparql"
 NORTH_MACEDONIA_QID = "Q221"
 REQUEST_DELAY = 2.0
-LIMIT_PER_CATEGORY = 1
+LIMIT_PER_CATEGORY = 1 # Adjust this to control how many entities per category are fetched (e.g. 10, 50, 100)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = REPO_ROOT / "data"
@@ -118,6 +119,7 @@ CATEGORIES: List[Dict[str, Any]] = [
 # ---------------------------------------------------------------------------
 
 def sparql_query(query: str) -> dict:
+    # Execute a SPARQL query against Wikidata and return parsed JSON.
     resp = requests.get(
         SPARQL_ENDPOINT,
         params={"query": query, "format": "json"},
@@ -132,6 +134,7 @@ def sparql_query(query: str) -> dict:
 
 
 def _human_query(occupation_qid: str, country_prop: str, limit: int) -> str:
+    # Build a discovery query for human entities filtered by occupation and country.
     return f"""
 SELECT DISTINCT ?entity WHERE {{
   ?entity wdt:P31 wd:Q5 .
@@ -143,6 +146,7 @@ LIMIT {limit}
 
 
 def _type_query(type_qid: str, country_prop: str, limit: int) -> str:
+    # Build a discovery query for non-human entities filtered by type and country.
     return f"""
 SELECT DISTINCT ?entity WHERE {{
   ?entity wdt:P31/wdt:P279* wd:{type_qid} .
@@ -153,6 +157,7 @@ LIMIT {limit}
 
 
 def _extract_qid(uri: str) -> str:
+    # Extract the trailing QID token from a Wikidata entity URI.
     return uri.rsplit("/", 1)[-1]
 
 
@@ -160,14 +165,37 @@ def _extract_qid(uri: str) -> str:
 # Main discovery function
 # ---------------------------------------------------------------------------
 
-def discover_entities(limit_per_category: int = LIMIT_PER_CATEGORY) -> List[str]:
+def _normalize_category_name(name: str) -> str:
+    # Normalize category names for case-insensitive matching.
+    return " ".join(name.strip().lower().split())
+
+
+def _filter_categories(category_names: Iterable[str] | None) -> List[Dict[str, Any]]:
+    # Select requested categories and fail fast when unknown names are supplied.
+    if not category_names:
+        return CATEGORIES
+
+    wanted = {_normalize_category_name(name) for name in category_names if name.strip()}
+    filtered = [cat for cat in CATEGORIES if _normalize_category_name(cat["name"]) in wanted]
+    missing = sorted(wanted - {_normalize_category_name(cat["name"]) for cat in filtered})
+    if missing:
+        raise ValueError(f"Unknown categories: {', '.join(missing)}")
+    return filtered
+
+
+def discover_entities(
+    limit_per_category: int = LIMIT_PER_CATEGORY,
+    category_names: Iterable[str] | None = None,
+) -> List[str]:
+    # Run all category queries and return deduplicated, sorted QIDs.
     """
     Run all category queries against Wikidata and return a sorted,
     deduplicated list of QIDs.
     """
     discovered: set = set()
+    categories = _filter_categories(category_names)
 
-    for cat in CATEGORIES:
+    for cat in categories:
         name = cat["name"]
         country_prop = cat["country_prop"]
 
@@ -200,7 +228,9 @@ def discover_entities(limit_per_category: int = LIMIT_PER_CATEGORY) -> List[str]
 if __name__ == "__main__":
     import json
 
-    qids = discover_entities()
+    categories_env = os.getenv("PIPELINE_CATEGORIES", "")
+    category_names = [c.strip() for c in categories_env.split(",") if c.strip()]
+    qids = discover_entities(category_names=category_names or None)
     out = DATA_DIR / "discovered_qids.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(qids, indent=2, ensure_ascii=False), encoding="utf-8")

@@ -1,16 +1,20 @@
 """
 Phase 4 – Normalization Layer
-==============================
+=============================
 
-Converts structured entity JSON (produced by Phase 2 + 3) into:
-  - A deterministic, factual text paragraph (RAG-ready, no LLM required)
-  - A clean metadata dict for filtered retrieval in LightRAG
+Builds the canonical ingestion document for LightRAG.
 
-Design principles:
-  - Pure functions; no side effects
-  - Deterministic output for the same input
-    - Wikipedia chunked text is preferred; summary is fallback
-  - Structured facts follow in a consistent order
+Use Phase 4 when you want:
+  - stable, repeatable ingestion text
+  - strongest retrieval / KG extraction quality
+  - chunkable factual content without extra LLM cost
+
+Output:
+  - ``text``: deterministic document text
+  - ``ingest_chunks``: pre-built chunks for ingestion
+  - ``metadata``: filterable retrieval metadata
+
+Phase 5 is optional and should not replace this phase for primary ingestion.
 """
 from __future__ import annotations
 
@@ -159,7 +163,9 @@ LANG_RENDERERS: Dict[str, Dict[str, Any]] = {"en": RENDERERS_EN, "mk": RENDERERS
 # Document builder
 # ---------------------------------------------------------------------------
 
-def build_document(entity: Dict[str, Any], lang: str = "en") -> Tuple[str, Dict[str, Any]]:
+def build_document(
+    entity: Dict[str, Any], lang: str = "en"
+) -> Tuple[str, Dict[str, Any], List[str]]:
     """
     Convert one entity dict into (text_paragraph, metadata).
 
@@ -171,9 +177,9 @@ def build_document(entity: Dict[str, Any], lang: str = "en") -> Tuple[str, Dict[
                 (already fetched in the best available language).
 
     text_paragraph structure:
-        1. Heading sentence  (name + description)
-        2. Wikipedia chunked text when available; otherwise summary extract
-        3. Structured fact sentences (one per property, in ``lang``)
+        1. Heading sentence
+        2. Curated Wikipedia retrieval text from Phase 3 when available
+        3. Structured fact sentences rendered in a fixed order
 
     metadata is language-independent (always contains both label_mk and label_en).
     """
@@ -200,19 +206,27 @@ def build_document(entity: Dict[str, Any], lang: str = "en") -> Tuple[str, Dict[
     )
 
     lines: List[str] = []
+    ingest_chunks: List[str] = []
 
     # ── 1. Heading ────────────────────────────────────────────────────────────
     if desc:
-        lines.append(f"{name} — {desc}.")
+        heading = f"{name} — {desc}."
     else:
-        lines.append(fallback_sentence)
+        heading = fallback_sentence
+    lines.append(heading)
+    ingest_chunks.append(heading)
 
     # ── 2. Wikipedia text (full preferred, summary fallback) ────────────────
     if wiki_text:
         lines.append("")
         lines.append(wiki_text)
+        if wiki_chunks:
+            ingest_chunks.extend(chunk.strip() for chunk in wiki_chunks if chunk.strip())
+        else:
+            ingest_chunks.append(wiki_text.strip())
 
     # ── 3. Structured facts ───────────────────────────────────────────────────
+    fact_lines: List[str] = []
     lines.append("")
     for prop_key, renderer in renderers.items():
         vals = props.get(prop_key)
@@ -220,6 +234,10 @@ def build_document(entity: Dict[str, Any], lang: str = "en") -> Tuple[str, Dict[
             continue
         sentence = renderer(name, vals)
         lines.append(sentence)
+        fact_lines.append(sentence)
+
+    if fact_lines:
+        ingest_chunks.append("\n".join(fact_lines))
 
     # Strip trailing blank lines
     while lines and not lines[-1].strip():
@@ -257,7 +275,7 @@ def build_document(entity: Dict[str, Any], lang: str = "en") -> Tuple[str, Dict[
         "source":          "wikidata+wikipedia",
     }
 
-    return text, metadata
+    return text, metadata, ingest_chunks
 
 
 def normalize_all(
@@ -281,9 +299,16 @@ def normalize_all(
     documents: List[Dict[str, Any]] = []
     for qid, entity in entities.items():
         try:
-            text, metadata = build_document(entity, lang=lang)
+            text, metadata, ingest_chunks = build_document(entity, lang=lang)
             if text.strip():
-                documents.append({"qid": qid, "text": text, "metadata": metadata})
+                documents.append(
+                    {
+                        "qid": qid,
+                        "text": text,
+                        "metadata": metadata,
+                        "ingest_chunks": ingest_chunks,
+                    }
+                )
         except Exception as exc:
             print(f"  Normalization error for {qid}: {exc}")
     return documents

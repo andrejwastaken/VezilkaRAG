@@ -1,14 +1,20 @@
 """
 Phase 3 – Wikipedia Article Fetch
-===================================
+=================================
 
-For each entity that has a Macedonian (mk) or English (en) Wikipedia sitelink
-(discovered in Phase 2), fetches the article summary via the REST API.
+Fetches Wikipedia text for entities discovered in earlier phases, but does not
+blindly ingest entire articles. The goal is queryable retrieval text, not raw
+encyclopedia dumps.
 
-Macedonian is preferred over English because it provides native-language
-paragraphs which dramatically improve RAG quality for Macedonian queries.
+Strategy:
+  - fetch the lead summary via REST API
+  - fetch plaintext article content via MediaWiki
+  - keep the lead plus a small number of informative sections
+  - skip boilerplate sections such as references and external links
+  - chunk the curated text for downstream normalization/ingestion
 
-REST API docs: https://en.wikipedia.org/api/rest_v1/#/Page_content/get_page_summary__title_
+This produces denser chunks, reduces ingestion cost, and avoids arbitrary
+character truncation in the middle of an article.
 """
 from __future__ import annotations
 
@@ -28,15 +34,39 @@ EN_WIKI_API = "https://en.wikipedia.org/w/api.php"
 MK_WIKI_PAGE = "https://mk.wikipedia.org/wiki/{title}"
 EN_WIKI_PAGE = "https://en.wikipedia.org/wiki/{title}"
 
-# Full articles can be very large; cap length for practical ingestion volume.
-MAX_FULLTEXT_CHARS = 30000
 DEFAULT_CHUNK_SIZE_TOKENS = 450
 DEFAULT_CHUNK_OVERLAP_TOKENS = 60
+DEFAULT_TARGET_TOKENS = 3200
+DEFAULT_MAX_SECTION_TOKENS = 900
+DEFAULT_MAX_SECTIONS = 4
 
 CHUNK_SIZE_TOKENS = int(os.getenv("LIGHTRAG_WIKI_CHUNK_TOKENS", str(DEFAULT_CHUNK_SIZE_TOKENS)))
 CHUNK_OVERLAP_TOKENS = int(
     os.getenv("LIGHTRAG_WIKI_CHUNK_OVERLAP_TOKENS", str(DEFAULT_CHUNK_OVERLAP_TOKENS))
 )
+TARGET_TEXT_TOKENS = int(os.getenv("LIGHTRAG_WIKI_TARGET_TOKENS", str(DEFAULT_TARGET_TOKENS)))
+MAX_SECTION_TOKENS = int(
+    os.getenv("LIGHTRAG_WIKI_MAX_SECTION_TOKENS", str(DEFAULT_MAX_SECTION_TOKENS))
+)
+MAX_SECTIONS = int(os.getenv("LIGHTRAG_WIKI_MAX_SECTIONS", str(DEFAULT_MAX_SECTIONS)))
+
+SECTION_HEADING_RE = re.compile(r"^(={2,6})\s*(.*?)\s*\1\s*$", flags=re.MULTILINE)
+IGNORED_SECTION_TITLES = {
+    "see also",
+    "references",
+    "notes",
+    "citations",
+    "sources",
+    "further reading",
+    "external links",
+    "bibliography",
+    "works cited",
+    "publications",
+    "selected works",
+    "discography",
+    "filmography",
+    "gallery",
+}
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = REPO_ROOT / "data"
@@ -75,7 +105,7 @@ def fetch_summary(title: str, lang: str = "mk") -> Optional[str]:
 
 
 def _fetch_full_text(title: str, lang: str = "mk") -> Optional[dict]:
-    """Fetch full plaintext article content via MediaWiki action API."""
+    """Fetch plaintext article content via MediaWiki action API."""
     api_url = MK_WIKI_API if lang == "mk" else EN_WIKI_API
     try:
         resp = requests.get(
@@ -105,7 +135,7 @@ def _fetch_full_text(title: str, lang: str = "mk") -> Optional[dict]:
             return {
                 "title": page.get("title") or title,
                 "pageid": page.get("pageid"),
-                "full_text": raw[:MAX_FULLTEXT_CHARS],
+                "full_text": raw,
             }
         return None
     except Exception:
@@ -164,6 +194,118 @@ def _build_overlap_tail(parts: list[str], overlap_tokens: int) -> list[str]:
         if total >= overlap_tokens:
             break
     return tail
+
+
+def _normalize_section_title(title: str) -> str:
+    # Normalize section titles for stable ignore-list matching.
+    return re.sub(r"\s+", " ", title).strip().lower()
+
+
+def _clean_section_body(body: str) -> str:
+    # Remove empty lines and trailing whitespace from section bodies.
+    lines = [line.rstrip() for line in body.splitlines()]
+    cleaned = "\n".join(line for line in lines if line.strip()).strip()
+    return cleaned
+
+
+def _truncate_to_tokens(text: str, token_limit: int) -> str:
+    # Trim text to a token budget while preserving sentence boundaries.
+    if token_limit <= 0 or _token_count(text) <= token_limit:
+        return text
+
+    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]
+    if not sentences:
+        return text
+
+    kept: list[str] = []
+    total = 0
+    for sentence in sentences:
+        sentence_tokens = _token_count(sentence)
+        if kept and total + sentence_tokens > token_limit:
+            break
+        kept.append(sentence)
+        total += sentence_tokens
+        if total >= token_limit:
+            break
+    return " ".join(kept).strip() or text
+
+
+def _split_article_sections(text: str) -> list[dict[str, Any]]:
+    """Split plaintext wiki extract into lead + heading-based sections."""
+    cleaned = text.strip()
+    if not cleaned:
+        return []
+
+    matches = list(SECTION_HEADING_RE.finditer(cleaned))
+    if not matches:
+        return [{"title": "Lead", "text": cleaned, "level": 0}]
+
+    sections: list[dict[str, Any]] = []
+    lead_text = cleaned[: matches[0].start()].strip()
+    if lead_text:
+        sections.append({"title": "Lead", "text": lead_text, "level": 0})
+
+    for idx, match in enumerate(matches):
+        heading = match.group(2).strip()
+        level = len(match.group(1))
+        body_start = match.end()
+        body_end = matches[idx + 1].start() if idx + 1 < len(matches) else len(cleaned)
+        body = _clean_section_body(cleaned[body_start:body_end])
+        if not body:
+            continue
+        sections.append({"title": heading, "text": body, "level": level})
+
+    return sections
+
+
+def _select_queryable_sections(
+    full_text: str,
+    summary: Optional[str],
+) -> tuple[str, list[str]]:
+    """
+    Keep a bounded, informative article slice for retrieval.
+
+    The selected text should answer common entity questions quickly:
+    who/what it is, why it matters, key dates/places/works, and major context.
+    """
+    sections = _split_article_sections(full_text)
+    if not sections:
+        return summary or "", []
+
+    chosen_blocks: list[str] = []
+    chosen_titles: list[str] = []
+    budget = max(TARGET_TEXT_TOKENS, CHUNK_SIZE_TOKENS)
+
+    lead_section = sections[0]
+    lead_text = _truncate_to_tokens(lead_section["text"], min(MAX_SECTION_TOKENS, budget))
+    if lead_text:
+        chosen_blocks.append(lead_text)
+        chosen_titles.append(lead_section["title"])
+        budget -= _token_count(lead_text)
+
+    informative_count = 0
+    for section in sections[1:]:
+        if informative_count >= MAX_SECTIONS or budget <= CHUNK_OVERLAP_TOKENS:
+            break
+
+        normalized_title = _normalize_section_title(section["title"])
+        if normalized_title in IGNORED_SECTION_TITLES:
+            continue
+
+        section_budget = min(MAX_SECTION_TOKENS, budget)
+        section_text = _truncate_to_tokens(section["text"], section_budget)
+        if not section_text or _token_count(section_text) < 40:
+            continue
+
+        chosen_blocks.append(f"{section['title']}\n{section_text}".strip())
+        chosen_titles.append(section["title"])
+        informative_count += 1
+        budget -= _token_count(section_text)
+
+    curated_text = "\n\n".join(block for block in chosen_blocks if block.strip()).strip()
+    if not curated_text:
+        return summary or "", []
+    return curated_text, chosen_titles
 
 
 def _chunk_text_for_lightrag(
@@ -236,17 +378,23 @@ def fetch_article_data(title: str, lang: str = "mk") -> Optional[Dict[str, Any]]
     encoded_title = urllib.parse.quote(resolved_title.replace(" ", "_"), safe="")
     page_template = MK_WIKI_PAGE if lang == "mk" else EN_WIKI_PAGE
 
-    full_text = (full or {}).get("full_text")
+    raw_full_text = (full or {}).get("full_text")
+    full_text, selected_sections = (
+        _select_queryable_sections(raw_full_text, summary) if raw_full_text else (summary or "", [])
+    )
     chunks = _chunk_text_for_lightrag(full_text) if full_text else []
 
     return {
         "summary": summary,
         "full_text": full_text,
+        "raw_full_text": raw_full_text,
         "chunks": chunks,
         "title": resolved_title,
         "pageid": (full or {}).get("pageid"),
         "url": page_template.format(title=encoded_title),
         "lang": lang,
+        "selected_sections": selected_sections,
+        "selection_strategy": "lead_plus_informative_sections",
     }
 
 
@@ -301,6 +449,8 @@ def enrich_with_wikipedia(
             ent["wikipedia_url"] = article.get("url")
             ent["wikipedia_lang"] = article.get("lang")
             ent["wikipedia_pageid"] = article.get("pageid")
+            ent["wikipedia_selected_sections"] = article.get("selected_sections") or []
+            ent["wikipedia_selection_strategy"] = article.get("selection_strategy")
 
             found += 1
             label = ent.get("label_en") or ent.get("label_mk") or qid

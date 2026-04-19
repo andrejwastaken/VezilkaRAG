@@ -4,9 +4,10 @@ This module contains all query-related routes for the LightRAG API.
 
 import json
 from typing import Any, Dict, List, Literal, Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from lightrag.base import QueryParam
 from lightrag.api.utils_api import get_combined_auth_dependency
+from lightrag.kg.shared_storage import get_default_workspace, set_default_workspace
 from lightrag.utils import logger
 from pydantic import BaseModel, Field, field_validator
 
@@ -190,8 +191,18 @@ class StreamChunkResponse(BaseModel):
     )
 
 
-def create_query_routes(rag, api_key: Optional[str] = None, top_k: int = 60):
+def create_query_routes(
+    rag,
+    api_key: Optional[str] = None,
+    top_k: int = 60,
+    rag_from_request=None,
+):
     combined_auth = get_combined_auth_dependency(api_key)
+
+    async def resolve_rag(request: Request):
+        if callable(rag_from_request):
+            return await rag_from_request(request)
+        return rag
 
     @router.post(
         "/query",
@@ -322,7 +333,7 @@ def create_query_routes(rag, api_key: Optional[str] = None, top_k: int = 60):
             },
         },
     )
-    async def query_text(request: QueryRequest):
+    async def query_text(request: QueryRequest, http_request: Request):
         """
         Comprehensive RAG query endpoint with non-streaming response. Parameter "stream" is ignored.
 
@@ -409,7 +420,13 @@ def create_query_routes(rag, api_key: Optional[str] = None, top_k: int = 60):
             param.stream = False
 
             # Unified approach: always use aquery_llm for both cases
-            result = await rag.aquery_llm(request.query, param=param)
+            active_rag = await resolve_rag(http_request)
+            previous_workspace = get_default_workspace()
+            try:
+                set_default_workspace(active_rag.workspace)
+                result = await active_rag.aquery_llm(request.query, param=param)
+            finally:
+                set_default_workspace(previous_workspace)
 
             # Extract LLM response and references from unified result
             llm_response = result.get("llm_response", {})
@@ -532,7 +549,7 @@ def create_query_routes(rag, api_key: Optional[str] = None, top_k: int = 60):
             },
         },
     )
-    async def query_text_stream(request: QueryRequest):
+    async def query_text_stream(request: QueryRequest, http_request: Request):
         """
         Advanced RAG query endpoint with flexible streaming response.
 
@@ -667,7 +684,13 @@ def create_query_routes(rag, api_key: Optional[str] = None, top_k: int = 60):
             from fastapi.responses import StreamingResponse
 
             # Unified approach: always use aquery_llm for all cases
-            result = await rag.aquery_llm(request.query, param=param)
+            active_rag = await resolve_rag(http_request)
+            previous_workspace = get_default_workspace()
+            try:
+                set_default_workspace(active_rag.workspace)
+                result = await active_rag.aquery_llm(request.query, param=param)
+            finally:
+                set_default_workspace(previous_workspace)
 
             async def stream_generator():
                 # Extract references and LLM response from unified result
@@ -1035,7 +1058,7 @@ def create_query_routes(rag, api_key: Optional[str] = None, top_k: int = 60):
             },
         },
     )
-    async def query_data(request: QueryRequest):
+    async def query_data(request: QueryRequest, http_request: Request):
         """
         Advanced data retrieval endpoint for structured RAG analysis.
 
@@ -1140,7 +1163,13 @@ def create_query_routes(rag, api_key: Optional[str] = None, top_k: int = 60):
         """
         try:
             param = request.to_query_params(False)  # No streaming for data endpoint
-            response = await rag.aquery_data(request.query, param=param)
+            active_rag = await resolve_rag(http_request)
+            previous_workspace = get_default_workspace()
+            try:
+                set_default_workspace(active_rag.workspace)
+                response = await active_rag.aquery_data(request.query, param=param)
+            finally:
+                set_default_workspace(previous_workspace)
 
             # aquery_data returns the new format with status, message, data, and metadata
             if isinstance(response, dict):

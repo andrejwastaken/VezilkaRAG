@@ -2,6 +2,8 @@
 LightRAG FastAPI Server
 """
 
+import asyncio
+
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -58,7 +60,7 @@ from lightrag.utils import logger, set_verbose_debug
 from lightrag.kg.shared_storage import (
     get_namespace_data,
     get_default_workspace,
-    # set_default_workspace,
+    set_default_workspace,
     cleanup_keyed_lock,
     finalize_share_data,
 )
@@ -1100,6 +1102,47 @@ def create_app(args):
         logger.error(f"Failed to initialize LightRAG: {e}")
         raise
 
+    workspace_rag_cache: dict[str, LightRAG] = {rag.workspace or "": rag}
+    workspace_rag_locks: dict[str, asyncio.Lock] = {}
+
+    async def get_rag_from_request(request: Request) -> LightRAG:
+        workspace = get_workspace_from_request(request)
+        effective_workspace = workspace if workspace is not None else rag.workspace
+        cache_key = effective_workspace or ""
+        if cache_key not in workspace_rag_cache:
+            workspace_rag_cache[cache_key] = LightRAG(
+                working_dir=rag.working_dir,
+                workspace=effective_workspace,
+                llm_model_func=rag.llm_model_func,
+                llm_model_name=rag.llm_model_name,
+                llm_model_max_async=rag.llm_model_max_async,
+                summary_max_tokens=rag.summary_max_tokens,
+                summary_context_size=rag.summary_context_size,
+                chunk_token_size=rag.chunk_token_size,
+                chunk_overlap_token_size=rag.chunk_overlap_token_size,
+                llm_model_kwargs=rag.llm_model_kwargs,
+                embedding_func=rag.embedding_func,
+                default_llm_timeout=rag.default_llm_timeout,
+                default_embedding_timeout=rag.default_embedding_timeout,
+                kv_storage=rag.kv_storage,
+                graph_storage=rag.graph_storage,
+                vector_storage=rag.vector_storage,
+                doc_status_storage=rag.doc_status_storage,
+                vector_db_storage_cls_kwargs=rag.vector_db_storage_cls_kwargs,
+                enable_llm_cache_for_entity_extract=rag.enable_llm_cache_for_entity_extract,
+                enable_llm_cache=rag.enable_llm_cache,
+                rerank_model_func=rag.rerank_model_func,
+                max_parallel_insert=rag.max_parallel_insert,
+                max_graph_nodes=rag.max_graph_nodes,
+                addon_params=rag.addon_params,
+                ollama_server_infos=rag.ollama_server_infos,
+            )
+
+        lock = workspace_rag_locks.setdefault(cache_key, asyncio.Lock())
+        async with lock:
+            await workspace_rag_cache[cache_key].initialize_storages()
+        return workspace_rag_cache[cache_key]
+
     # Add routes
     app.include_router(
         create_document_routes(
@@ -1108,7 +1151,14 @@ def create_app(args):
             api_key,
         )
     )
-    app.include_router(create_query_routes(rag, api_key, args.top_k))
+    app.include_router(
+        create_query_routes(
+            rag,
+            api_key,
+            args.top_k,
+            rag_from_request=get_rag_from_request,
+        )
+    )
     app.include_router(create_graph_routes(rag, api_key))
 
     # Add Ollama API routes
@@ -1247,9 +1297,15 @@ def create_app(args):
             default_workspace = get_default_workspace()
             if workspace is None:
                 workspace = default_workspace
-            pipeline_status = await get_namespace_data(
-                "pipeline_status", workspace=workspace
-            )
+            previous_workspace = default_workspace
+            active_rag = await get_rag_from_request(request)
+            try:
+                set_default_workspace(active_rag.workspace)
+                pipeline_status = await get_namespace_data(
+                    "pipeline_status", workspace=workspace
+                )
+            finally:
+                set_default_workspace(previous_workspace)
 
             if not auth_configured:
                 auth_mode = "disabled"

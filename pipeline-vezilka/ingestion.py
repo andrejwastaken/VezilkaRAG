@@ -18,8 +18,9 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = REPO_ROOT / "data"
-DEFAULT_WORKING_DIR = DATA_DIR / "rag_storage"
+DEFAULT_WORKING_DIR = Path(os.getenv("WORKING_DIR", str(DATA_DIR / "rag_storage")))
 DEFAULT_SPLIT_BY_CHARACTER = "\n\n"
+EXPLICIT_CHUNK_SEPARATOR = "\n\n<|LIGHTRAG_PIPELINE_CHUNK|>\n\n"
 
 
 # ---------------------------------------------------------------------------
@@ -27,20 +28,27 @@ DEFAULT_SPLIT_BY_CHARACTER = "\n\n"
 # ---------------------------------------------------------------------------
 
 def _select_text(doc: Dict[str, Any], prefer_llm_summary: bool) -> str:
-    """Return the text to embed for a document."""
+    """Return the text to embed for a document. 
+    Choose summary text or structured chunks as the insertion payload for one doc."""
     if prefer_llm_summary and doc.get("llm_summary"):
         return doc["llm_summary"]
+    ingest_chunks = doc.get("ingest_chunks") or []
+    if ingest_chunks:
+        return EXPLICIT_CHUNK_SEPARATOR.join(
+            chunk.strip() for chunk in ingest_chunks if chunk and chunk.strip()
+        )
     return doc.get("text", "")
 
 
 def _build_batches(
     documents: List[Dict[str, Any]],
     prefer_llm_summary: bool,
-) -> Tuple[List[str], List[str], List[str]]:
-    """Return (texts, ids, file_paths) lists, filtering out blank documents."""
+) -> Tuple[List[str], List[str], List[str], Dict[str, Dict[str, Any]]]:
+    """Return (texts, ids, file_paths, metadata_by_id) lists, filtering out blank documents."""
     texts: List[str] = []
     ids: List[str] = []
     file_paths: List[str] = []
+    metadata_by_id: Dict[str, Dict[str, Any]] = {}
     for doc in documents:
         text = _select_text(doc, prefer_llm_summary)
         if text.strip():
@@ -49,7 +57,50 @@ def _build_batches(
             texts.append(text)
             ids.append(doc["qid"])
             file_paths.append(source_url)
-    return texts, ids, file_paths
+            metadata_by_id[doc["qid"]] = metadata
+    return texts, ids, file_paths, metadata_by_id
+
+
+def _storage_backends_from_env() -> Dict[str, str]:
+    """Mirror the API server's storage backend selection for standalone ingestion."""
+    return {
+        "kv_storage": os.getenv("LIGHTRAG_KV_STORAGE", "JsonKVStorage"),
+        "vector_storage": os.getenv("LIGHTRAG_VECTOR_STORAGE", "NanoVectorDBStorage"),
+        "graph_storage": os.getenv("LIGHTRAG_GRAPH_STORAGE", "NetworkXStorage"),
+        "doc_status_storage": os.getenv(
+            "LIGHTRAG_DOC_STATUS_STORAGE", "JsonDocStatusStorage"
+        ),
+    }
+
+
+async def _persist_doc_metadata(
+    rag: Any,
+    doc_ids: List[str],
+    metadata_by_id: Dict[str, Dict[str, Any]],
+) -> None:
+    """Attach source metadata to LightRAG doc_status rows after insertion."""
+    updates: Dict[str, Dict[str, Any]] = {}
+    for doc_id in doc_ids:
+        existing = await rag.doc_status.get_by_id(doc_id)
+        if not existing:
+            continue
+        merged_metadata = dict(existing.get("metadata") or {})
+        merged_metadata.update(metadata_by_id.get(doc_id) or {})
+        updates[doc_id] = {
+            "status": existing["status"],
+            "content_summary": existing["content_summary"],
+            "content_length": existing["content_length"],
+            "chunks_count": existing.get("chunks_count", -1),
+            "chunks_list": existing.get("chunks_list", []),
+            "created_at": existing["created_at"],
+            "updated_at": existing["updated_at"],
+            "file_path": existing["file_path"],
+            "track_id": existing.get("track_id"),
+            "error_msg": existing.get("error_msg"),
+            "metadata": merged_metadata,
+        }
+    if updates:
+        await rag.doc_status.upsert(updates)
 
 
 # ---------------------------------------------------------------------------
@@ -114,12 +165,14 @@ async def ingest_documents(
                         "timeout": int(os.getenv("LLM_TIMEOUT", "600")),
                     }
                 if embed_func is None:
+                    embedding_model = os.getenv("EMBEDDING_MODEL", "bge-m3:latest")
                     embed_func = EmbeddingFunc(
                         embedding_dim=int(os.getenv("EMBEDDING_DIM", "1024")),
                         max_token_size=int(os.getenv("MAX_EMBED_TOKENS", "8192")),
+                        model_name=embedding_model,
                         func=partial(
                             ollama_embed.func,
-                            embed_model=os.getenv("EMBEDDING_MODEL", "bge-m3:latest"),
+                            embed_model=embedding_model,
                             host=embed_host,
                         ),
                     )
@@ -127,15 +180,49 @@ async def ingest_documents(
                 print(f"Cannot import Ollama LLM bindings: {exc}")
                 return
         else:
-            if not os.getenv("OPENAI_API_KEY"):
-                print("OPENAI_API_KEY is not set.  Skipping ingestion.")
+            api_key = os.getenv("LLM_BINDING_API_KEY") or os.getenv("OPENAI_API_KEY")
+            if not api_key:
+                print("LLM_BINDING_API_KEY / OPENAI_API_KEY is not set.  Skipping ingestion.")
                 return
             try:
-                from lightrag.llm.openai import gpt_4o_mini_complete, openai_embed
+                from functools import partial
+                from lightrag.llm.openai import openai_complete_if_cache, openai_embed
+                from lightrag.utils import EmbeddingFunc
+
+                model = os.getenv("LLM_MODEL", "gpt-4.1-mini")
+                base_url = os.getenv("LLM_BINDING_HOST") or None
+                embedding_base_url = os.getenv("EMBEDDING_BINDING_HOST") or base_url
+                embedding_model = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
+                embedding_dim = int(os.getenv("EMBEDDING_DIM", "1536"))
+                max_embed_tokens = int(os.getenv("MAX_EMBED_TOKENS", "8192"))
+                timeout = int(os.getenv("LLM_TIMEOUT", "600"))
+
                 if llm_func is None:
-                    llm_func = gpt_4o_mini_complete
+                    async def _openai_llm_wrapper(*args, **kwargs):
+                        kwargs.pop("hashing_kv", None)
+                        return await openai_complete_if_cache(
+                            model,
+                            *args,
+                            api_key=api_key,
+                            base_url=base_url,
+                            timeout=timeout,
+                            **kwargs,
+                        )
+
+                    llm_func = _openai_llm_wrapper
+                    llm_model_name = model
                 if embed_func is None:
-                    embed_func = openai_embed
+                    embed_func = EmbeddingFunc(
+                        embedding_dim=embedding_dim,
+                        max_token_size=max_embed_tokens,
+                        model_name=embedding_model,
+                        func=partial(
+                            openai_embed.func,
+                            model=embedding_model,
+                            api_key=api_key,
+                            base_url=embedding_base_url,
+                        ),
+                    )
             except ImportError as exc:
                 print(f"Cannot import OpenAI LLM bindings: {exc}")
                 return
@@ -151,11 +238,12 @@ async def ingest_documents(
         llm_model_kwargs=llm_model_kwargs,
         embedding_func=embed_func,
         max_parallel_insert=batch_size,
+        **_storage_backends_from_env(),
     )
     await rag.initialize_storages()
 
     # ── Build text / id lists ─────────────────────────────────────────────────
-    texts, ids, file_paths = _build_batches(documents, prefer_llm_summary)
+    texts, ids, file_paths, metadata_by_id = _build_batches(documents, prefer_llm_summary)
 
     if not texts:
         print("No non-empty documents to ingest.")
@@ -168,13 +256,21 @@ async def ingest_documents(
         f"split_by={split_by_character!r}) ..."
     )
 
+    actual_split_by = split_by_character
+    actual_split_by_character_only = split_by_character_only
+    if not prefer_llm_summary:
+        actual_split_by = EXPLICIT_CHUNK_SEPARATOR
+        # Phase 4 already prepares bounded ingest chunks, so keep them intact.
+        actual_split_by_character_only = True
+
     await rag.ainsert(
         texts,
-        split_by_character=split_by_character,
-        split_by_character_only=split_by_character_only,
+        split_by_character=actual_split_by,
+        split_by_character_only=actual_split_by_character_only,
         ids=ids,
         file_paths=file_paths,
     )
+    await _persist_doc_metadata(rag, ids, metadata_by_id)
     await rag.finalize_storages()
 
     print(f"  Ingestion complete.  Storage: {storage}")

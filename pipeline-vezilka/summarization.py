@@ -1,18 +1,17 @@
 """
 Phase 5 – Optional LLM Summarization
-=======================================
+====================================
 
-Optionally compresses a normalized document into a compact narrative summary.
-This phase is NOT required for ingestion when chunked deterministic text from
-Phase 4 is used directly.
+Compresses a Phase 4 document into a short narrative summary.
 
-Stored separately from the structured paragraph:
-  - ``text``        →  deterministic factual text (Phase 4)
-  - ``llm_summary`` →  LLM narrative (Phase 5, optional)
+Use Phase 5 when you want:
+  - lightweight previews in a UI
+  - lower-cost smoke tests
+  - emergency fallback when full local ingestion is too slow
 
-Best practice with chunked ingestion:
-    - Use ``text`` for retrieval quality and lower hallucination risk
-    - Use ``llm_summary`` mainly for UI display or quick previews
+Do not use Phase 5 as the default replacement for Phase 4 if retrieval quality
+matters. Summary-only ingestion is faster, but it drops detail and can reduce
+mix/KG recall.
 """
 from __future__ import annotations
 
@@ -57,6 +56,7 @@ SUMMARY:"""
 # ---------------------------------------------------------------------------
 
 def _truncate(text: str, max_chars: int) -> str:
+    # Bound long source text to avoid oversized summarization prompts.
     if len(text) <= max_chars:
         return text
     return text[:max_chars].rstrip() + "\n\n[TRUNCATED FOR SUMMARIZATION INPUT]"
@@ -170,11 +170,12 @@ if __name__ == "__main__":
     import json
 
     async def _main() -> None:
-        if not os.getenv("OPENAI_API_KEY"):
-            print("OPENAI_API_KEY is not set.")
+        api_key = os.getenv("LLM_BINDING_API_KEY") or os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            print("LLM_BINDING_API_KEY / OPENAI_API_KEY is not set.")
             return
         try:
-            from lightrag.llm.openai import gpt_4o_mini_complete
+            from lightrag.llm.openai import openai_complete_if_cache
         except ImportError:
             print("LightRAG is not installed.")
             return
@@ -186,7 +187,20 @@ if __name__ == "__main__":
 
         docs = json.loads(src.read_text(encoding="utf-8"))
         sample = docs[:5]
-        sample = await summarize_all(sample, gpt_4o_mini_complete)
+        model = os.getenv("LLM_MODEL", "gpt-4.1-mini")
+        base_url = os.getenv("LLM_BINDING_HOST") or None
+        timeout = int(os.getenv("LLM_TIMEOUT", "600"))
+
+        async def _openai_prompt_llm(prompt: str) -> str:
+            return await openai_complete_if_cache(
+                model,
+                prompt,
+                api_key=api_key,
+                base_url=base_url,
+                timeout=timeout,
+            )
+
+        sample = await summarize_all(sample, _openai_prompt_llm)
 
         print("\n── Summaries ────────────────────────────────────────────")
         for d in sample:
