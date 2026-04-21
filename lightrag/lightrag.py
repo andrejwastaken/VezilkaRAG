@@ -3,9 +3,12 @@ from __future__ import annotations
 import traceback
 import asyncio
 import configparser
+import difflib
 import inspect
 import os
+import re
 import time
+import unicodedata
 import warnings
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
@@ -234,6 +237,21 @@ class LightRAG:
     )
     """Maximum number of entity extraction attempts for ambiguous content."""
 
+    stabilize_extraction: bool = field(
+        default=get_env_value("STABILIZE_EXTRACTION", True, bool)
+    )
+    """Enable deterministic extraction behavior tuning (temperature/gleaning safeguards)."""
+
+    disable_gleaning_for_stability: bool = field(
+        default=get_env_value("DISABLE_GLEANING_FOR_STABILITY", False, bool)
+    )
+    """Disable gleaning passes for extraction stability when set to True."""
+
+    extract_temperature: float | None = field(
+        default=get_env_value("EXTRACT_TEMPERATURE", None, float, special_none=True)
+    )
+    """Optional extraction temperature override to stabilize entity extraction."""
+
     max_extract_input_tokens: int = field(
         default=get_env_value(
             "MAX_EXTRACT_INPUT_TOKENS", DEFAULT_MAX_EXTRACT_INPUT_TOKENS, int
@@ -246,6 +264,54 @@ class LightRAG:
             "FORCE_LLM_SUMMARY_ON_MERGE", DEFAULT_FORCE_LLM_SUMMARY_ON_MERGE, int
         )
     )
+
+    enable_entity_canonicalization: bool = field(
+        default=get_env_value("ENABLE_ENTITY_CANONICALIZATION", True, bool)
+    )
+    """Enable canonical person identity resolution before graph upsert."""
+
+    canonical_person_entity_types: list[str] = field(
+        default_factory=lambda: get_env_value(
+            "CANONICAL_PERSON_ENTITY_TYPES",
+            [
+                "person",
+                "artist",
+                "singer",
+                "musician",
+                "actor",
+                "actress",
+                "author",
+                "athlete",
+                "politician",
+            ],
+            list,
+        )
+    )
+    """Entity types treated as person-like for canonicalization."""
+
+    canonical_common_surname_blacklist: list[str] = field(
+        default_factory=lambda: get_env_value(
+            "CANONICAL_COMMON_SURNAME_BLACKLIST", [], list
+        )
+    )
+    """Common surnames that should never be globally merged as partial aliases."""
+
+    canonical_min_relation_overlap: float = field(
+        default=get_env_value("CANONICAL_MIN_RELATION_OVERLAP", 0.5, float)
+    )
+    """Minimum relation-neighborhood overlap required for partial-name merges."""
+
+    canonical_partial_requires_unique: bool = field(
+        default=get_env_value("CANONICAL_PARTIAL_REQUIRES_UNIQUE", True, bool)
+    )
+    """Require exactly one strong full-name candidate before partial-name merge."""
+
+    auto_sync_person_types_from_pipeline_categories: bool = field(
+        default=get_env_value(
+            "AUTO_SYNC_PERSON_TYPES_FROM_PIPELINE_CATEGORIES", True, bool
+        )
+    )
+    """If True, enrich canonical person types from PIPELINE_CATEGORIES selection."""
 
     # Text chunking
     # ---
@@ -411,6 +477,21 @@ class LightRAG:
     )
     """Maximum number of graph nodes to return in knowledge graph queries."""
 
+    entity_resolution_auto_merge_threshold: float = field(
+        default=get_env_value("ENTITY_RESOLUTION_AUTO_MERGE_THRESHOLD", 0.86, float)
+    )
+    """Post-ingestion auto-merge threshold for candidate duplicate entities."""
+
+    entity_resolution_review_threshold: float = field(
+        default=get_env_value("ENTITY_RESOLUTION_REVIEW_THRESHOLD", 0.72, float)
+    )
+    """Post-ingestion review threshold for candidate duplicate entities."""
+
+    entity_resolution_top_k: int = field(
+        default=get_env_value("ENTITY_RESOLUTION_TOP_K", 12, int)
+    )
+    """Top-k vector neighbors used for post-ingestion entity candidate scoring."""
+
     max_source_ids_per_entity: int = field(
         default=get_env_value(
             "MAX_SOURCE_IDS_PER_ENTITY", DEFAULT_MAX_SOURCE_IDS_PER_ENTITY, int
@@ -470,6 +551,71 @@ class LightRAG:
     """Configuration for Ollama server information."""
 
     _storages_status: StoragesStatus = field(default=StoragesStatus.NOT_CREATED)
+
+    def _sync_person_types_from_pipeline_categories(self) -> None:
+        if not self.auto_sync_person_types_from_pipeline_categories:
+            return
+
+        categories_env = os.getenv("PIPELINE_CATEGORIES", "")
+        if not categories_env.strip():
+            return
+
+        category_to_person_types = {
+            "artists": {"artist", "person"},
+            "musicians": {"musician", "person"},
+            "singers": {"singer", "musician", "person"},
+            "filmdirectors": {"director", "person"},
+            "actors": {"actor", "actress", "person"},
+            "writers": {"writer", "author", "person"},
+            "painters": {"painter", "artist", "person"},
+            "sculptors": {"sculptor", "artist", "person"},
+            "architects": {"architect", "person"},
+            "poets": {"poet", "writer", "person"},
+            "composers": {"composer", "musician", "person"},
+            "athletes": {"athlete", "sportsperson", "person"},
+            "scientists": {"scientist", "person"},
+            "politicians": {"politician", "person"},
+            "journalists": {"journalist", "person"},
+            "photographers": {"photographer", "artist", "person"},
+            "screenwriters": {"screenwriter", "writer", "person"},
+            "dancers": {"dancer", "artist", "person"},
+            "choreographers": {"choreographer", "artist", "person"},
+            "illustrators": {"illustrator", "artist", "person"},
+            "graphicdesigners": {"graphicdesigner", "designer", "artist", "person"},
+            "historians": {"historian", "person"},
+            "chefs": {"chef", "person"},
+            "artisans": {"artisan", "artist", "person"},
+            "revolutionaries": {"revolutionary", "person"},
+        }
+
+        selected_categories = [
+            re.sub(r"[^a-z0-9]", "", item.strip().lower())
+            for item in categories_env.split(",")
+            if item.strip()
+        ]
+        if not selected_categories:
+            return
+
+        current_types = {
+            str(item).strip().lower()
+            for item in self.canonical_person_entity_types
+            if str(item).strip()
+        }
+
+        added_types: set[str] = set()
+        for category in selected_categories:
+            new_types = category_to_person_types.get(category, set())
+            for person_type in new_types:
+                if person_type not in current_types:
+                    current_types.add(person_type)
+                    added_types.add(person_type)
+
+        if added_types:
+            self.canonical_person_entity_types = sorted(current_types)
+            logger.info(
+                "Enriched canonical person types from PIPELINE_CATEGORIES: %s",
+                ", ".join(sorted(added_types)),
+            )
 
     def __post_init__(self):
         from lightrag.kg.shared_storage import (
@@ -535,6 +681,8 @@ class LightRAG:
             self.ollama_server_infos = OllamaServerInfos()
 
         # Validate config
+        self._sync_person_types_from_pipeline_categories()
+
         if self.force_llm_summary_on_merge < 3:
             logger.warning(
                 f"force_llm_summary_on_merge should be at least 3, got {self.force_llm_summary_on_merge}"
@@ -646,6 +794,24 @@ class LightRAG:
             embedding_func=self.embedding_func,
         )
 
+        self.alias_to_canonical: BaseKVStorage = self.key_string_value_json_storage_cls(  # type: ignore
+            namespace=NameSpace.KV_STORE_ALIAS_TO_CANONICAL,
+            workspace=self.workspace,
+            embedding_func=self.embedding_func,
+        )
+
+        self.canonical_to_aliases: BaseKVStorage = self.key_string_value_json_storage_cls(  # type: ignore
+            namespace=NameSpace.KV_STORE_CANONICAL_TO_ALIASES,
+            workspace=self.workspace,
+            embedding_func=self.embedding_func,
+        )
+
+        self.entity_resolution_review: BaseKVStorage = self.key_string_value_json_storage_cls(  # type: ignore
+            namespace=NameSpace.KV_STORE_ENTITY_RESOLUTION_REVIEW,
+            workspace=self.workspace,
+            embedding_func=self.embedding_func,
+        )
+
         self.chunk_entity_relation_graph: BaseGraphStorage = self.graph_storage_cls(  # type: ignore
             namespace=NameSpace.GRAPH_STORE_CHUNK_ENTITY_RELATION,
             workspace=self.workspace,
@@ -723,6 +889,9 @@ class LightRAG:
                 self.full_relations,
                 self.entity_chunks,
                 self.relation_chunks,
+                self.alias_to_canonical,
+                self.canonical_to_aliases,
+                self.entity_resolution_review,
                 self.entities_vdb,
                 self.relationships_vdb,
                 self.chunks_vdb,
@@ -747,6 +916,9 @@ class LightRAG:
                 ("full_relations", self.full_relations),
                 ("entity_chunks", self.entity_chunks),
                 ("relation_chunks", self.relation_chunks),
+                ("alias_to_canonical", self.alias_to_canonical),
+                ("canonical_to_aliases", self.canonical_to_aliases),
+                ("entity_resolution_review", self.entity_resolution_review),
                 ("entities_vdb", self.entities_vdb),
                 ("relationships_vdb", self.relationships_vdb),
                 ("chunks_vdb", self.chunks_vdb),
@@ -2086,6 +2258,8 @@ class LightRAG:
                                     llm_response_cache=self.llm_response_cache,
                                     entity_chunks_storage=self.entity_chunks,
                                     relation_chunks_storage=self.relation_chunks,
+                                    alias_to_canonical_storage=self.alias_to_canonical,
+                                    canonical_aliases_storage=self.canonical_to_aliases,
                                     current_file_number=current_file_number,
                                     total_files=total_files,
                                     file_path=file_path,
@@ -4075,6 +4249,264 @@ class LightRAG:
         return loop.run_until_complete(
             self.amerge_entities(
                 source_entities, target_entity, merge_strategy, target_entity_data
+            )
+        )
+
+    async def aresolve_entities_post_ingestion(
+        self,
+        auto_merge_threshold: float | None = None,
+        review_threshold: float | None = None,
+        top_k: int | None = None,
+        max_candidates: int = 300,
+    ) -> dict[str, Any]:
+        """Resolve likely duplicate person entities using string, vector, and graph signals.
+
+        Auto-merges high-confidence candidates and writes borderline cases to review storage.
+        """
+
+        def _normalize_alias_text(text: str) -> str:
+            normalized = unicodedata.normalize("NFKD", str(text or "").casefold())
+            normalized = "".join(ch for ch in normalized if not unicodedata.combining(ch))
+            normalized = re.sub(r"[^a-z0-9\s-]", " ", normalized)
+            normalized = re.sub(r"[-_]+", " ", normalized)
+            normalized = re.sub(r"\s+", " ", normalized).strip()
+            return normalized
+
+        def _tokenize_alias_text(text: str) -> list[str]:
+            return [token for token in _normalize_alias_text(text).split(" ") if token]
+
+        def _canonical_person_key(entity_name: str) -> str:
+            return " ".join(_tokenize_alias_text(entity_name))
+
+        def _jaccard(left: set[str], right: set[str]) -> float:
+            if not left and not right:
+                return 1.0
+            if not left or not right:
+                return 0.0
+            union = left | right
+            if not union:
+                return 0.0
+            return len(left & right) / len(union)
+
+        auto_thr = (
+            auto_merge_threshold
+            if auto_merge_threshold is not None
+            else self.entity_resolution_auto_merge_threshold
+        )
+        review_thr = (
+            review_threshold
+            if review_threshold is not None
+            else self.entity_resolution_review_threshold
+        )
+        top_k_candidates = top_k if top_k is not None else self.entity_resolution_top_k
+
+        person_types = {t.strip().lower() for t in self.canonical_person_entity_types if t}
+        graph_nodes = await self.chunk_entity_relation_graph.get_all_nodes()
+        person_nodes = [
+            node
+            for node in graph_nodes
+            if str(node.get("entity_type", "")).strip().lower() in person_types
+        ]
+        if not person_nodes:
+            return {
+                "total_person_nodes": 0,
+                "candidate_pairs": 0,
+                "auto_merged": 0,
+                "review_queued": 0,
+                "review_items": [],
+            }
+
+        node_by_id = {
+            str(node.get("id") or node.get("entity_id")): node
+            for node in person_nodes
+            if (node.get("id") or node.get("entity_id"))
+        }
+        node_ids = list(node_by_id.keys())
+        edges_batch = await self.chunk_entity_relation_graph.get_nodes_edges_batch(node_ids)
+        neighbors: dict[str, set[str]] = {}
+        for node_id in node_ids:
+            node_neighbors: set[str] = set()
+            for edge in edges_batch.get(node_id, []) or []:
+                if len(edge) != 2:
+                    continue
+                src, tgt = edge
+                other = tgt if src == node_id else src
+                if other and other != node_id:
+                    node_neighbors.add(str(other))
+            neighbors[node_id] = node_neighbors
+
+        groups: dict[str, list[str]] = {}
+        for node_id in node_ids:
+            key = _canonical_person_key(node_id)
+            if len(key.split()) < 2:
+                continue
+            groups.setdefault(key, []).append(node_id)
+
+        candidate_pairs: list[tuple[str, str]] = []
+        for grouped_ids in groups.values():
+            if len(grouped_ids) < 2:
+                continue
+            for idx in range(len(grouped_ids)):
+                for jdx in range(idx + 1, len(grouped_ids)):
+                    candidate_pairs.append((grouped_ids[idx], grouped_ids[jdx]))
+                    if len(candidate_pairs) >= max_candidates:
+                        break
+                if len(candidate_pairs) >= max_candidates:
+                    break
+            if len(candidate_pairs) >= max_candidates:
+                break
+
+        vector_neighbors: dict[str, dict[str, float]] = {}
+        for node_id in node_ids:
+            try:
+                query_result = await self.entities_vdb.query(node_id, top_k=top_k_candidates)
+            except Exception:
+                vector_neighbors[node_id] = {}
+                continue
+
+            score_map: dict[str, float] = {}
+            for row in query_result:
+                candidate_name = str(row.get("entity_name") or row.get("id") or "").strip()
+                if not candidate_name:
+                    continue
+                distance = row.get("distance", 0.0)
+                try:
+                    score = float(distance)
+                except (ValueError, TypeError):
+                    score = 0.0
+                if score > 1.0:
+                    score = 1.0 / (1.0 + score)
+                score_map[candidate_name] = max(0.0, min(1.0, score))
+            vector_neighbors[node_id] = score_map
+
+        review_items: list[dict[str, Any]] = []
+        merge_proposals: list[tuple[float, str, str]] = []
+
+        for left, right in candidate_pairs:
+            if left not in node_by_id or right not in node_by_id:
+                continue
+
+            left_type = str(node_by_id[left].get("entity_type", "")).strip().lower()
+            right_type = str(node_by_id[right].get("entity_type", "")).strip().lower()
+            if left_type and right_type and left_type != right_type:
+                continue
+
+            left_tokens = _tokenize_alias_text(left)
+            right_tokens = _tokenize_alias_text(right)
+            if len(left_tokens) >= 2 and len(right_tokens) >= 2:
+                if left_tokens[-1] != right_tokens[-1]:
+                    continue
+
+            string_score = difflib.SequenceMatcher(
+                None, _normalize_alias_text(left), _normalize_alias_text(right)
+            ).ratio()
+            graph_score = _jaccard(neighbors.get(left, set()), neighbors.get(right, set()))
+            vec_lr = vector_neighbors.get(left, {}).get(right, 0.0)
+            vec_rl = vector_neighbors.get(right, {}).get(left, 0.0)
+            vector_score = max(vec_lr, vec_rl)
+
+            total_score = 0.45 * string_score + 0.35 * vector_score + 0.20 * graph_score
+            if total_score >= auto_thr:
+                if len(left_tokens) > len(right_tokens):
+                    merge_proposals.append((total_score, right, left))
+                else:
+                    merge_proposals.append((total_score, left, right))
+            elif total_score >= review_thr:
+                review_items.append(
+                    {
+                        "source": left,
+                        "target": right,
+                        "score": round(total_score, 4),
+                        "string_score": round(string_score, 4),
+                        "vector_score": round(vector_score, 4),
+                        "graph_score": round(graph_score, 4),
+                        "status": "review",
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    }
+                )
+
+        merge_proposals.sort(key=lambda item: item[0], reverse=True)
+        merged_nodes: set[str] = set()
+        auto_merged = 0
+
+        for score, source_entity, target_entity in merge_proposals:
+            if source_entity in merged_nodes or target_entity in merged_nodes:
+                continue
+            if source_entity == target_entity:
+                continue
+            await self.amerge_entities(
+                source_entities=[source_entity],
+                target_entity=target_entity,
+                merge_strategy={
+                    "description": "concatenate",
+                    "source_id": "join_unique",
+                    "file_path": "join_unique",
+                    "aliases": "join_unique",
+                },
+            )
+            auto_merged += 1
+            merged_nodes.add(source_entity)
+            merged_nodes.add(target_entity)
+
+            alias_payload: dict[str, dict[str, Any]] = {}
+            for alias_name in [source_entity, target_entity]:
+                alias_key = _normalize_alias_text(alias_name)
+                if alias_key:
+                    alias_payload[alias_key] = {
+                        "alias": alias_name,
+                        "canonical_id": target_entity,
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    }
+            if alias_payload:
+                await self.alias_to_canonical.upsert(alias_payload)
+
+            existing_aliases = await self.canonical_to_aliases.get_by_id(target_entity)
+            merged_aliases = set()
+            if existing_aliases and isinstance(existing_aliases, dict):
+                merged_aliases.update(existing_aliases.get("aliases", []))
+            merged_aliases.update([source_entity, target_entity])
+            await self.canonical_to_aliases.upsert(
+                {
+                    target_entity: {
+                        "canonical_id": target_entity,
+                        "aliases": sorted(merged_aliases),
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    }
+                }
+            )
+
+        if review_items:
+            review_payload = {}
+            for item in review_items:
+                review_id = compute_mdhash_id(
+                    f"{item['source']}|{item['target']}|{item['score']}",
+                    prefix="review-",
+                )
+                review_payload[review_id] = item
+            await self.entity_resolution_review.upsert(review_payload)
+
+        return {
+            "total_person_nodes": len(person_nodes),
+            "candidate_pairs": len(candidate_pairs),
+            "auto_merged": auto_merged,
+            "review_queued": len(review_items),
+            "review_items": review_items,
+        }
+
+    def resolve_entities_post_ingestion(
+        self,
+        auto_merge_threshold: float | None = None,
+        review_threshold: float | None = None,
+        top_k: int | None = None,
+        max_candidates: int = 300,
+    ) -> dict[str, Any]:
+        loop = always_get_an_event_loop()
+        return loop.run_until_complete(
+            self.aresolve_entities_post_ingestion(
+                auto_merge_threshold=auto_merge_threshold,
+                review_threshold=review_threshold,
+                top_k=top_k,
+                max_candidates=max_candidates,
             )
         )
 

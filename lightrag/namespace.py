@@ -12,6 +12,9 @@ class NameSpace:
     KV_STORE_FULL_RELATIONS = "full_relations"
     KV_STORE_ENTITY_CHUNKS = "entity_chunks"
     KV_STORE_RELATION_CHUNKS = "relation_chunks"
+    KV_STORE_ALIAS_TO_CANONICAL = "alias_to_canonical"
+    KV_STORE_CANONICAL_TO_ALIASES = "canonical_to_aliases"
+    KV_STORE_ENTITY_RESOLUTION_REVIEW = "entity_resolution_review"
 
     VECTOR_STORE_ENTITIES = "entities"
     VECTOR_STORE_RELATIONSHIPS = "relationships"

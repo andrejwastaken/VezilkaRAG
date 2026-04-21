@@ -1,10 +1,13 @@
 from __future__ import annotations
 from functools import partial
 from pathlib import Path
+from typing import cast
 
 import asyncio
 import json
 import json_repair
+import re
+import unicodedata
 from typing import Any, AsyncIterator, overload, Literal
 from collections import Counter, defaultdict
 
@@ -94,6 +97,241 @@ def _truncate_entity_identifier(
         preview,
     )
     return display_value
+
+
+def _normalize_person_alias_key(entity_name: str) -> str:
+    normalized = unicodedata.normalize("NFKD", str(entity_name or "").casefold())
+    normalized = "".join(ch for ch in normalized if not unicodedata.combining(ch))
+    normalized = re.sub(r"[^a-z0-9\s-]", " ", normalized)
+    normalized = re.sub(r"[-_]+", " ", normalized)
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    return normalized
+
+
+def _tokenize_person_alias(entity_name: str) -> list[str]:
+    return [token for token in _normalize_person_alias_key(entity_name).split(" ") if token]
+
+
+def _jaccard_similarity(left: set[str], right: set[str]) -> float:
+    if not left and not right:
+        return 1.0
+    if not left or not right:
+        return 0.0
+    union = left | right
+    if not union:
+        return 0.0
+    return len(left & right) / len(union)
+
+
+def _is_person_entity_type(entity_type: str, person_types: set[str]) -> bool:
+    return str(entity_type or "").strip().lower() in person_types
+
+
+async def _canonicalize_entities_for_merge(
+    all_nodes: dict[str, list[dict[str, Any]]],
+    all_edges: dict[tuple[str, str], list[dict[str, Any]]],
+    global_config: dict[str, Any],
+    alias_to_canonical_storage: BaseKVStorage | None,
+    canonical_aliases_storage: BaseKVStorage | None,
+) -> tuple[dict[str, list[dict[str, Any]]], dict[tuple[str, str], list[dict[str, Any]]]]:
+    if not global_config.get("enable_entity_canonicalization", True):
+        return dict(all_nodes), dict(all_edges)
+
+    person_types = {
+        str(t).strip().lower()
+        for t in (global_config.get("canonical_person_entity_types") or ["person"])
+        if str(t).strip()
+    }
+    common_surnames = {
+        str(t).strip().lower()
+        for t in (global_config.get("canonical_common_surname_blacklist") or [])
+        if str(t).strip()
+    }
+    min_relation_overlap = float(global_config.get("canonical_min_relation_overlap", 0.5))
+    require_unique_partial = bool(
+        global_config.get("canonical_partial_requires_unique", True)
+    )
+
+    neighbors: dict[str, set[str]] = defaultdict(set)
+    for (src, tgt) in all_edges.keys():
+        neighbors[src].add(tgt)
+        neighbors[tgt].add(src)
+
+    profiles: dict[str, dict[str, Any]] = {}
+    alias_lookup_keys: dict[str, str] = {}
+    for mention, entities in all_nodes.items():
+        entity_types = [
+            str(entity.get("entity_type", "")).strip().lower()
+            for entity in entities
+            if entity.get("entity_type")
+        ]
+        dominant_type = (
+            sorted(Counter(entity_types).items(), key=lambda item: item[1], reverse=True)[0][0]
+            if entity_types
+            else ""
+        )
+        source_ids = {
+            str(entity.get("source_id"))
+            for entity in entities
+            if entity.get("source_id")
+        }
+        file_paths = {
+            str(entity.get("file_path"))
+            for entity in entities
+            if entity.get("file_path")
+        }
+        tokens = _tokenize_person_alias(mention)
+        profiles[mention] = {
+            "tokens": tokens,
+            "entity_type": dominant_type,
+            "source_ids": source_ids,
+            "file_paths": file_paths,
+            "is_person": _is_person_entity_type(dominant_type, person_types),
+        }
+        alias_lookup_keys[mention] = _normalize_person_alias_key(mention)
+
+    mention_to_canonical: dict[str, str] = {}
+    if alias_to_canonical_storage is not None:
+        lookup_tasks = []
+        ordered_mentions = []
+        for mention, alias_key in alias_lookup_keys.items():
+            if not alias_key:
+                continue
+            ordered_mentions.append(mention)
+            lookup_tasks.append(alias_to_canonical_storage.get_by_id(alias_key))
+        if lookup_tasks:
+            lookup_results = await asyncio.gather(*lookup_tasks, return_exceptions=True)
+            for mention, result in zip(ordered_mentions, lookup_results, strict=False):
+                if isinstance(result, Exception) or not result:
+                    continue
+                if not isinstance(result, dict):
+                    continue
+                canonical_id = str(result.get("canonical_id", "")).strip()
+                if canonical_id:
+                    mention_to_canonical[mention] = canonical_id
+
+    full_person_mentions = [
+        mention
+        for mention, profile in profiles.items()
+        if profile["is_person"] and len(profile["tokens"]) >= 2
+    ]
+
+    for mention, profile in profiles.items():
+        if mention in mention_to_canonical:
+            continue
+        if not profile["is_person"]:
+            mention_to_canonical[mention] = mention
+            continue
+        tokens = profile["tokens"]
+        if len(tokens) >= 2:
+            mention_to_canonical[mention] = mention
+            continue
+        if len(tokens) != 1:
+            mention_to_canonical[mention] = mention
+            continue
+
+        token = tokens[0]
+        if token in common_surnames:
+            mention_to_canonical[mention] = mention
+            continue
+
+        candidates: list[tuple[float, str]] = []
+        for full_mention in full_person_mentions:
+            full_profile = profiles[full_mention]
+            if token not in full_profile["tokens"]:
+                continue
+
+            if (
+                profile["entity_type"]
+                and full_profile["entity_type"]
+                and profile["entity_type"] != full_profile["entity_type"]
+            ):
+                continue
+
+            if profile["file_paths"] and full_profile["file_paths"]:
+                if profile["file_paths"].isdisjoint(full_profile["file_paths"]):
+                    continue
+
+            relation_overlap = _jaccard_similarity(
+                neighbors.get(mention, set()),
+                neighbors.get(full_mention, set()),
+            )
+            if relation_overlap < min_relation_overlap:
+                continue
+
+            candidates.append((relation_overlap, full_mention))
+
+        candidates.sort(key=lambda item: item[0], reverse=True)
+        if len(candidates) == 1:
+            mention_to_canonical[mention] = candidates[0][1]
+        elif candidates and not require_unique_partial:
+            mention_to_canonical[mention] = candidates[0][1]
+        else:
+            mention_to_canonical[mention] = mention
+
+    canonical_nodes: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    canonical_edges: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
+    canonical_aliases: dict[str, set[str]] = defaultdict(set)
+
+    for mention, entity_rows in all_nodes.items():
+        canonical_id = mention_to_canonical.get(mention, mention)
+        canonical_aliases[canonical_id].add(mention)
+        for entity_row in entity_rows:
+            normalized_row = dict(entity_row)
+            normalized_row["entity_name"] = canonical_id
+            normalized_row["original_mention"] = mention
+            canonical_nodes[canonical_id].append(normalized_row)
+
+    for (src, tgt), relation_rows in all_edges.items():
+        canonical_src = mention_to_canonical.get(src, src)
+        canonical_tgt = mention_to_canonical.get(tgt, tgt)
+        if canonical_src == canonical_tgt:
+            continue
+        edge_key = cast(
+            tuple[str, str], tuple(sorted((canonical_src, canonical_tgt)))
+        )
+        for relation_row in relation_rows:
+            normalized_row = dict(relation_row)
+            normalized_row["src_id"] = canonical_src
+            normalized_row["tgt_id"] = canonical_tgt
+            normalized_row["original_src"] = src
+            normalized_row["original_tgt"] = tgt
+            canonical_edges[edge_key].append(normalized_row)
+
+    if alias_to_canonical_storage is not None:
+        alias_payload = {}
+        now_ts = int(time.time())
+        for mention, canonical_id in mention_to_canonical.items():
+            alias_key = alias_lookup_keys.get(mention, "")
+            if not alias_key:
+                continue
+            alias_payload[alias_key] = {
+                "alias": mention,
+                "canonical_id": canonical_id,
+                "updated_at": now_ts,
+            }
+        if alias_payload:
+            await alias_to_canonical_storage.upsert(alias_payload)
+
+    if canonical_aliases_storage is not None:
+        upsert_payload = {}
+        now_ts = int(time.time())
+        for canonical_id, aliases in canonical_aliases.items():
+            existing = await canonical_aliases_storage.get_by_id(canonical_id)
+            merged_aliases = set(aliases)
+            if existing and isinstance(existing, dict):
+                for alias in existing.get("aliases", []):
+                    if alias:
+                        merged_aliases.add(str(alias))
+            upsert_payload[canonical_id] = {
+                "canonical_id": canonical_id,
+                "aliases": sorted(merged_aliases),
+                "updated_at": now_ts,
+            }
+        if upsert_payload:
+            await canonical_aliases_storage.upsert(upsert_payload)
+
+    return dict(canonical_nodes), dict(canonical_edges)
 
 
 def chunking_by_token_size(
@@ -444,6 +682,7 @@ async def _handle_single_entity_extraction(
 
         return dict(
             entity_name=entity_name,
+            original_mention=entity_name,
             entity_type=entity_type,
             description=entity_description,
             source_id=chunk_key,
@@ -530,6 +769,8 @@ async def _handle_single_relationship_extraction(
         return dict(
             src_id=source,
             tgt_id=target,
+            original_src=source,
+            original_tgt=target,
             weight=weight,
             description=edge_description,
             keywords=edge_keywords,
@@ -1506,6 +1747,7 @@ async def _rebuild_single_relationship(
                 "description": node_description,
                 "entity_type": "UNKNOWN",
                 "file_path": node_file_path,
+                "aliases": node_id,
                 "created_at": node_created_at,
                 "truncate": "",
             }
@@ -1626,6 +1868,7 @@ async def _merge_nodes_then_upsert(
     already_source_ids = []
     already_description = []
     already_file_paths = []
+    already_aliases = []
 
     # 1. Get existing node data from knowledge graph
     already_node = await knowledge_graph_inst.get_node(entity_name)
@@ -1658,6 +1901,10 @@ async def _merge_nodes_then_upsert(
         existing_desc = (already_node.get("description") or "").strip()
         if existing_desc:
             already_description.extend(existing_desc.split(GRAPH_FIELD_SEP))
+
+        existing_aliases = (already_node.get("aliases") or "").strip()
+        if existing_aliases:
+            already_aliases.extend(existing_aliases.split(GRAPH_FIELD_SEP))
 
     new_source_ids = [dp["source_id"] for dp in nodes_data if dp.get("source_id")]
 
@@ -1879,12 +2126,28 @@ async def _merge_nodes_then_upsert(
         logger.debug(status_message)
 
     # 11. Update both graph and vector db
+    merged_aliases: list[str] = []
+    seen_aliases: set[str] = set()
+    for alias in already_aliases:
+        alias = str(alias or "").strip()
+        if alias and alias not in seen_aliases:
+            seen_aliases.add(alias)
+            merged_aliases.append(alias)
+    for dp in nodes_data:
+        alias = str(dp.get("original_mention") or dp.get("entity_name") or "").strip()
+        if alias and alias not in seen_aliases:
+            seen_aliases.add(alias)
+            merged_aliases.append(alias)
+    if entity_name not in seen_aliases:
+        merged_aliases.append(entity_name)
+
     node_data = dict(
         entity_id=entity_name,
         entity_type=entity_type,
         description=description,
         source_id=source_id,
         file_path=file_path,
+        aliases=GRAPH_FIELD_SEP.join(merged_aliases),
         created_at=int(time.time()),
         truncate=truncation_info,
     )
@@ -2223,6 +2486,7 @@ async def _merge_edges_then_upsert(
                 "description": description,
                 "entity_type": "UNKNOWN",
                 "file_path": file_path,
+                "aliases": need_insert_id,
                 "created_at": node_created_at,
                 "truncate": "",
             }
@@ -2454,6 +2718,8 @@ async def merge_nodes_and_edges(
     llm_response_cache: BaseKVStorage | None = None,
     entity_chunks_storage: BaseKVStorage | None = None,
     relation_chunks_storage: BaseKVStorage | None = None,
+    alias_to_canonical_storage: BaseKVStorage | None = None,
+    canonical_aliases_storage: BaseKVStorage | None = None,
     current_file_number: int = 0,
     total_files: int = 0,
     file_path: str = "unknown_source",
@@ -2503,6 +2769,14 @@ async def merge_nodes_and_edges(
         for edge_key, edges in maybe_edges.items():
             sorted_edge_key = tuple(sorted(edge_key))
             all_edges[sorted_edge_key].extend(edges)
+
+    all_nodes, all_edges = await _canonicalize_entities_for_merge(
+        all_nodes,
+        all_edges,
+        global_config,
+        alias_to_canonical_storage,
+        canonical_aliases_storage,
+    )
 
     total_entities_count = len(all_nodes)
     total_relations_count = len(all_edges)
@@ -2826,8 +3100,25 @@ async def extract_entities(
                     "User cancelled during entity extraction"
                 )
 
-    use_llm_func: callable = global_config["llm_model_func"]
+    base_llm_func = global_config["llm_model_func"]
     entity_extract_max_gleaning = global_config["entity_extract_max_gleaning"]
+
+    if global_config.get("disable_gleaning_for_stability", False):
+        entity_extract_max_gleaning = 0
+
+    extract_temperature = global_config.get("extract_temperature")
+    if global_config.get("stabilize_extraction", True) and extract_temperature is not None:
+
+        async def _stable_extract_llm(prompt: str, **kwargs):
+            try:
+                return await base_llm_func(prompt, temperature=extract_temperature, **kwargs)
+            except TypeError:
+                # Some provider wrappers do not expose a temperature kwarg.
+                return await base_llm_func(prompt, **kwargs)
+
+        use_llm_func = _stable_extract_llm
+    else:
+        use_llm_func = base_llm_func
 
     ordered_chunks = list(chunks.items())
     # add language and example number params to prompt
