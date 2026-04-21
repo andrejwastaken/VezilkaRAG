@@ -1,4 +1,23 @@
 services:
+  postgres:
+    image: gzdaniel/postgres-for-rag:16.6
+    platform: linux/amd64
+    container_name: lightrag-postgres
+    environment:
+      POSTGRES_USER: rag
+      POSTGRES_PASSWORD: rag
+      POSTGRES_DB: rag
+    ports:
+      - "5432:5432"
+    volumes:
+      - lightrag_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rag -d rag"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
   lightrag:
     image: ghcr.io/hkuds/lightrag:latest
     build:
@@ -30,3 +49,35 @@ services:
       POSTGRES_HOST: "postgres"
       HOST: "0.0.0.0"
       PORT: "9621"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  vezilka-pipeline:
+    build:
+      context: .
+      dockerfile: pipeline-vezilka/Dockerfile
+    env_file:
+      - ./.env
+    environment:
+      WORKING_DIR: "/app/data/rag_storage"
+      INPUT_DIR: "/app/data/inputs"
+      WORKSPACE: "${WORKSPACE:-main}"
+      POSTGRES_HOST: "postgres"
+      HOST: "0.0.0.0"
+      PORT: "9621"
+    volumes:
+      - ./data/rag_storage:/app/data/rag_storage
+      - ./data/inputs:/app/data/inputs
+      - ./data:/app/data
+      - ./.env:/app/.env
+    stdin_open: true
+    tty: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      lightrag:
+        condition: service_started
+
+volumes:
+  lightrag_pgdata:
