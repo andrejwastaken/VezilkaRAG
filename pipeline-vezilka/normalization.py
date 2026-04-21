@@ -254,10 +254,16 @@ def build_document(
         or []
     )
 
+    label_mk = entity.get("label_mk")
+    label_en = entity.get("label_en")
+    aliases = [alias for alias in [label_mk, label_en] if alias]
+
     metadata: Dict[str, Any] = {
         "qid":             qid,
-        "label_mk":        entity.get("label_mk"),
-        "label_en":        entity.get("label_en"),
+        "label_mk":        label_mk,
+        "label_en":        label_en,
+        "aliases":         aliases,
+        "canonical_entity_name": label_mk or label_en or qid,
         "description":     entity.get("description_en") or entity.get("description_mk"),
         "instance_of":     instance_types[:3],
         "country":         country[:1],

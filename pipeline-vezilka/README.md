@@ -27,10 +27,7 @@ Saved to: `data/discovered_qids.json`
 Shape:
 
 ```json
-[
-  "Q185232",
-  "Q50515696"
-]
+["Q185232", "Q50515696"]
 ```
 
 Meaning:
@@ -47,22 +44,22 @@ Shape (per entry):
 
 ```json
 {
-  "Q185232": {
-    "qid": "Q185232",
-    "label_mk": "...",
-    "label_en": "...",
-    "description_mk": "...",
-    "description_en": "...",
-    "sitelinks": {
-      "mkwiki": "...",
-      "enwiki": "..."
-    },
-    "properties": {
-      "instance_of": ["..."],
-      "occupation": ["..."],
-      "date_of_birth": ["..."]
-    }
-  }
+	"Q185232": {
+		"qid": "Q185232",
+		"label_mk": "...",
+		"label_en": "...",
+		"description_mk": "...",
+		"description_en": "...",
+		"sitelinks": {
+			"mkwiki": "...",
+			"enwiki": "..."
+		},
+		"properties": {
+			"instance_of": ["..."],
+			"occupation": ["..."],
+			"date_of_birth": ["..."]
+		}
+	}
 }
 ```
 
@@ -104,24 +101,27 @@ Shape:
 
 ```json
 [
-  {
-    "qid": "Q185232",
-    "text": "Deterministic full document text...",
-    "metadata": {
-      "qid": "Q185232",
-      "label_en": "...",
-      "has_wikipedia": true,
-      "wikipedia_url": "...",
-      "text_lang": "en",
-      "source": "wikidata+wikipedia"
-    },
-    "ingest_chunks": [
-      "heading chunk",
-      "wiki chunk 1",
-      "wiki chunk 2",
-      "facts chunk"
-    ]
-  }
+	{
+		"qid": "Q185232",
+		"text": "Deterministic full document text...",
+		"metadata": {
+			"qid": "Q185232",
+			"label_en": "...",
+			"label_mk": "...",
+			"aliases": ["...", "..."],
+			"canonical_entity_name": "...",
+			"has_wikipedia": true,
+			"wikipedia_url": "...",
+			"text_lang": "en",
+			"source": "wikidata+wikipedia"
+		},
+		"ingest_chunks": [
+			"heading chunk",
+			"wiki chunk 1",
+			"wiki chunk 2",
+			"facts chunk"
+		]
+	}
 ]
 ```
 
@@ -130,6 +130,11 @@ Meaning:
 - `text`: deterministic human-readable full body.
 - `ingest_chunks`: canonical chunk payload for ingestion.
 - `metadata`: retrieval/filter/source metadata.
+
+Additional metadata fields for bilingual pipelines:
+
+- `aliases`: known cross-language names (mk/en) for the same entity.
+- `canonical_entity_name`: default canonical graph name (mk when available).
 
 ## Phase 5 Output: Optional Summaries
 
@@ -172,6 +177,12 @@ Then ingestion calls `rag.ainsert(...)` with:
 - `file_paths`
 
 After insert, metadata is merged into `doc_status` rows via `rag.doc_status.upsert(...)`.
+
+Cross-language deduplication:
+
+- After insert, ingestion can merge mk/en duplicate entity nodes using `rag.amerge_entities(...)`.
+- This is enabled by default via `LIGHTRAG_MERGE_CROSS_LANGUAGE_ALIASES=true`.
+- Canonical target language is controlled by `LIGHTRAG_CANONICAL_ENTITY_LANG` (`mk` default, or `en`).
 
 ## Practical Summary
 

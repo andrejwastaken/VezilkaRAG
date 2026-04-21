@@ -30,14 +30,42 @@ EXPLICIT_CHUNK_SEPARATOR = "\n\n<|LIGHTRAG_PIPELINE_CHUNK|>\n\n"
 def _select_text(doc: Dict[str, Any], prefer_llm_summary: bool) -> str:
     """Return the text to embed for a document. 
     Choose summary text or structured chunks as the insertion payload for one doc."""
+    metadata = doc.get("metadata") or {}
+    alias_bridge = _build_alias_bridge_chunk(metadata)
+
     if prefer_llm_summary and doc.get("llm_summary"):
-        return doc["llm_summary"]
+        summary_text = doc["llm_summary"].strip()
+        if alias_bridge:
+            return f"{summary_text}\n\n{alias_bridge}"
+        return summary_text
+
     ingest_chunks = doc.get("ingest_chunks") or []
+    if alias_bridge:
+        ingest_chunks = [*ingest_chunks, alias_bridge]
+
     if ingest_chunks:
         return EXPLICIT_CHUNK_SEPARATOR.join(
             chunk.strip() for chunk in ingest_chunks if chunk and chunk.strip()
         )
-    return doc.get("text", "")
+
+    base_text = (doc.get("text", "") or "").strip()
+    if alias_bridge:
+        return f"{base_text}\n\n{alias_bridge}" if base_text else alias_bridge
+    return base_text
+
+
+def _build_alias_bridge_chunk(metadata: Dict[str, Any]) -> str:
+    """Create a compact bilingual alias hint chunk for cross-script retrieval."""
+    label_mk = (metadata.get("label_mk") or "").strip()
+    label_en = (metadata.get("label_en") or "").strip()
+    if not label_mk or not label_en:
+        return ""
+    if label_mk.casefold() == label_en.casefold():
+        return ""
+    return (
+        "Entity aliases (same entity): "
+        f"Macedonian/Cyrillic: {label_mk}; English/Latin: {label_en}."
+    )
 
 
 def _build_batches(
@@ -61,7 +89,7 @@ def _build_batches(
     return texts, ids, file_paths, metadata_by_id
 
 
-def _storage_backends_from_env() -> Dict[str, str]:
+def _storage_backends_from_env() -> Dict[str, Any]:
     """Mirror the API server's storage backend selection for standalone ingestion."""
     return {
         "kv_storage": os.getenv("LIGHTRAG_KV_STORAGE", "JsonKVStorage"),
@@ -71,6 +99,94 @@ def _storage_backends_from_env() -> Dict[str, str]:
             "LIGHTRAG_DOC_STATUS_STORAGE", "JsonDocStatusStorage"
         ),
     }
+
+
+def _collect_cross_language_merge_pairs(
+    documents: List[Dict[str, Any]],
+    canonical_lang: str,
+) -> List[Tuple[str, str]]:
+    """Build unique (source_entity, target_entity) pairs for mk/en aliases.
+
+    The target is the canonical name chosen by ``canonical_lang``.
+    """
+    seen: set[Tuple[str, str]] = set()
+    pairs: List[Tuple[str, str]] = []
+
+    for doc in documents:
+        metadata = doc.get("metadata") or {}
+        label_mk = (metadata.get("label_mk") or "").strip()
+        label_en = (metadata.get("label_en") or "").strip()
+        if not label_mk or not label_en:
+            continue
+        if label_mk.casefold() == label_en.casefold():
+            continue
+
+        if canonical_lang == "en":
+            target, source = label_en, label_mk
+        else:
+            target, source = label_mk, label_en
+
+        pair = (source, target)
+        if pair not in seen:
+            seen.add(pair)
+            pairs.append(pair)
+
+    return pairs
+
+
+async def _merge_cross_language_entities(
+    rag: Any,
+    documents: List[Dict[str, Any]],
+) -> None:
+    """Merge mk/en duplicate entity nodes into one canonical node per entity."""
+    if os.getenv("LIGHTRAG_MERGE_CROSS_LANGUAGE_ALIASES", "true").lower() != "true":
+        return
+
+    canonical_lang = os.getenv("LIGHTRAG_CANONICAL_ENTITY_LANG", "mk").strip().lower()
+    if canonical_lang not in {"mk", "en"}:
+        canonical_lang = "mk"
+
+    merge_pairs = _collect_cross_language_merge_pairs(documents, canonical_lang)
+    if not merge_pairs:
+        return
+
+    merged = 0
+    skipped = 0
+
+    for source_name, target_name in merge_pairs:
+        try:
+            source_exists = await rag.chunk_entity_relation_graph.has_node(source_name)
+            target_exists = await rag.chunk_entity_relation_graph.has_node(target_name)
+
+            if not source_exists:
+                skipped += 1
+                continue
+
+            if source_name == target_name:
+                skipped += 1
+                continue
+
+            target_overrides: Dict[str, Any] = {}
+            if not target_exists:
+                target_overrides["entity_type"] = "concept"
+
+            await rag.amerge_entities(
+                source_entities=[source_name],
+                target_entity=target_name,
+                target_entity_data=target_overrides or None,
+            )
+            merged += 1
+        except Exception as exc:
+            skipped += 1
+            print(
+                f"  Cross-language merge skipped for '{source_name}' -> '{target_name}': {exc}"
+            )
+
+    print(
+        "  Cross-language entity merge: "
+        f"{merged} merged, {skipped} skipped "
+        f"(canonical={canonical_lang})"
+    )
 
 
 async def _persist_doc_metadata(
@@ -271,6 +387,7 @@ async def ingest_documents(
         file_paths=file_paths,
     )
     await _persist_doc_metadata(rag, ids, metadata_by_id)
+    await _merge_cross_language_entities(rag, documents)
     await rag.finalize_storages()
 
     print(f"  Ingestion complete.  Storage: {storage}")

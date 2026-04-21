@@ -31,6 +31,8 @@ services:
       RERANK_BINDING_HOST: "http://vllm-rerank:8000/rerank"
       WORKING_DIR: "/app/data/rag_storage"
       INPUT_DIR: "/app/data/inputs"
+      LIGHTRAG_MERGE_CROSS_LANGUAGE_ALIASES: "${LIGHTRAG_MERGE_CROSS_LANGUAGE_ALIASES:-true}"
+      LIGHTRAG_CANONICAL_ENTITY_LANG: "${LIGHTRAG_CANONICAL_ENTITY_LANG:-mk}"
       MEMGRAPH_URI: "bolt://host.docker.internal:7687"
       HOST: "0.0.0.0"
       PORT: "9621"

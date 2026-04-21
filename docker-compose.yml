@@ -23,6 +23,8 @@ services:
       WORKING_DIR: "/app/data/rag_storage"
       INPUT_DIR: "/app/data/inputs"
       WORKSPACE: "${WORKSPACE:-main}"
+      LIGHTRAG_MERGE_CROSS_LANGUAGE_ALIASES: "${LIGHTRAG_MERGE_CROSS_LANGUAGE_ALIASES:-true}"
+      LIGHTRAG_CANONICAL_ENTITY_LANG: "${LIGHTRAG_CANONICAL_ENTITY_LANG:-mk}"
       POSTGRES_HOST: "postgres"
       HOST: "0.0.0.0"
       PORT: "9621"
