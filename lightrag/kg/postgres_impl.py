@@ -2022,6 +2022,29 @@ class PGKVStorage(BaseKVStorage):
             response["create_time"] = create_time
             response["update_time"] = create_time if update_time == 0 else update_time
 
+        if response and is_namespace(
+            self.namespace,
+            (
+                NameSpace.KV_STORE_ALIAS_TO_CANONICAL,
+                NameSpace.KV_STORE_CANONICAL_TO_ALIASES,
+                NameSpace.KV_STORE_ENTITY_RESOLUTION_REVIEW,
+            ),
+        ):
+            payload = response.get("data", {})
+            if isinstance(payload, str):
+                try:
+                    payload = json.loads(payload)
+                except json.JSONDecodeError:
+                    payload = {}
+            create_time = response.get("create_time", 0)
+            update_time = response.get("update_time", 0)
+            response = {
+                **(payload if isinstance(payload, dict) else {}),
+                "id": response.get("id"),
+                "create_time": create_time,
+                "update_time": create_time if update_time == 0 else update_time,
+            }
+
         return response if response else None
 
     # Query by id
@@ -2161,6 +2184,33 @@ class PGKVStorage(BaseKVStorage):
                 update_time = result.get("update_time", 0)
                 result["create_time"] = create_time
                 result["update_time"] = create_time if update_time == 0 else update_time
+
+        if results and is_namespace(
+            self.namespace,
+            (
+                NameSpace.KV_STORE_ALIAS_TO_CANONICAL,
+                NameSpace.KV_STORE_CANONICAL_TO_ALIASES,
+                NameSpace.KV_STORE_ENTITY_RESOLUTION_REVIEW,
+            ),
+        ):
+            processed_results = []
+            for row in results:
+                payload = row.get("data", {})
+                if isinstance(payload, str):
+                    try:
+                        payload = json.loads(payload)
+                    except json.JSONDecodeError:
+                        payload = {}
+                create_time = row.get("create_time", 0)
+                update_time = row.get("update_time", 0)
+                processed_row = {
+                    **(payload if isinstance(payload, dict) else {}),
+                    "id": row.get("id"),
+                    "create_time": create_time,
+                    "update_time": create_time if update_time == 0 else update_time,
+                }
+                processed_results.append(processed_row)
+            return _order_results(processed_results)
 
         return _order_results(results)
 
@@ -2305,6 +2355,45 @@ class PGKVStorage(BaseKVStorage):
                         k,
                         json.dumps(v["chunk_ids"]),
                         v["count"],
+                        current_time,
+                        current_time,
+                    )
+                )
+        elif is_namespace(self.namespace, NameSpace.KV_STORE_ALIAS_TO_CANONICAL):
+            upsert_sql = SQL_TEMPLATES["upsert_alias_to_canonical"]
+            current_time = datetime.datetime.now(timezone.utc).replace(tzinfo=None)
+            for k, v in data.items():
+                batch_values.append(
+                    (
+                        self.workspace,
+                        k,
+                        json.dumps(v),
+                        current_time,
+                        current_time,
+                    )
+                )
+        elif is_namespace(self.namespace, NameSpace.KV_STORE_CANONICAL_TO_ALIASES):
+            upsert_sql = SQL_TEMPLATES["upsert_canonical_to_aliases"]
+            current_time = datetime.datetime.now(timezone.utc).replace(tzinfo=None)
+            for k, v in data.items():
+                batch_values.append(
+                    (
+                        self.workspace,
+                        k,
+                        json.dumps(v),
+                        current_time,
+                        current_time,
+                    )
+                )
+        elif is_namespace(self.namespace, NameSpace.KV_STORE_ENTITY_RESOLUTION_REVIEW):
+            upsert_sql = SQL_TEMPLATES["upsert_entity_resolution_review"]
+            current_time = datetime.datetime.now(timezone.utc).replace(tzinfo=None)
+            for k, v in data.items():
+                batch_values.append(
+                    (
+                        self.workspace,
+                        k,
+                        json.dumps(v),
                         current_time,
                         current_time,
                     )
@@ -5457,6 +5546,9 @@ NAMESPACE_TABLE_MAP = {
     NameSpace.KV_STORE_FULL_RELATIONS: "LIGHTRAG_FULL_RELATIONS",
     NameSpace.KV_STORE_ENTITY_CHUNKS: "LIGHTRAG_ENTITY_CHUNKS",
     NameSpace.KV_STORE_RELATION_CHUNKS: "LIGHTRAG_RELATION_CHUNKS",
+    NameSpace.KV_STORE_ALIAS_TO_CANONICAL: "LIGHTRAG_ALIAS_TO_CANONICAL",
+    NameSpace.KV_STORE_CANONICAL_TO_ALIASES: "LIGHTRAG_CANONICAL_TO_ALIASES",
+    NameSpace.KV_STORE_ENTITY_RESOLUTION_REVIEW: "LIGHTRAG_ENTITY_RESOLUTION_REVIEW",
     NameSpace.KV_STORE_LLM_RESPONSE_CACHE: "LIGHTRAG_LLM_CACHE",
     NameSpace.VECTOR_STORE_CHUNKS: "LIGHTRAG_VDB_CHUNKS",
     NameSpace.VECTOR_STORE_ENTITIES: "LIGHTRAG_VDB_ENTITY",
@@ -5619,6 +5711,36 @@ TABLES = {
                     CONSTRAINT LIGHTRAG_RELATION_CHUNKS_PK PRIMARY KEY (workspace, id)
                     )"""
     },
+    "LIGHTRAG_ALIAS_TO_CANONICAL": {
+        "ddl": """CREATE TABLE LIGHTRAG_ALIAS_TO_CANONICAL (
+                    id VARCHAR(512),
+                    workspace VARCHAR(255),
+                    data JSONB,
+                    create_time TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP,
+                    update_time TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT LIGHTRAG_ALIAS_TO_CANONICAL_PK PRIMARY KEY (workspace, id)
+                    )"""
+    },
+    "LIGHTRAG_CANONICAL_TO_ALIASES": {
+        "ddl": """CREATE TABLE LIGHTRAG_CANONICAL_TO_ALIASES (
+                    id VARCHAR(512),
+                    workspace VARCHAR(255),
+                    data JSONB,
+                    create_time TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP,
+                    update_time TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT LIGHTRAG_CANONICAL_TO_ALIASES_PK PRIMARY KEY (workspace, id)
+                    )"""
+    },
+    "LIGHTRAG_ENTITY_RESOLUTION_REVIEW": {
+        "ddl": """CREATE TABLE LIGHTRAG_ENTITY_RESOLUTION_REVIEW (
+                    id VARCHAR(512),
+                    workspace VARCHAR(255),
+                    data JSONB,
+                    create_time TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP,
+                    update_time TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP,
+                    CONSTRAINT LIGHTRAG_ENTITY_RESOLUTION_REVIEW_PK PRIMARY KEY (workspace, id)
+                    )"""
+    },
 }
 
 
@@ -5696,6 +5818,36 @@ SQL_TEMPLATES = {
                                  EXTRACT(EPOCH FROM update_time)::BIGINT as update_time
                                  FROM LIGHTRAG_RELATION_CHUNKS WHERE workspace=$1 AND id = ANY($2)
                                 """,
+    "get_by_id_alias_to_canonical": """SELECT id, data,
+                                EXTRACT(EPOCH FROM create_time)::BIGINT as create_time,
+                                EXTRACT(EPOCH FROM update_time)::BIGINT as update_time
+                                FROM LIGHTRAG_ALIAS_TO_CANONICAL WHERE workspace=$1 AND id=$2
+                               """,
+    "get_by_ids_alias_to_canonical": """SELECT id, data,
+                                 EXTRACT(EPOCH FROM create_time)::BIGINT as create_time,
+                                 EXTRACT(EPOCH FROM update_time)::BIGINT as update_time
+                                 FROM LIGHTRAG_ALIAS_TO_CANONICAL WHERE workspace=$1 AND id = ANY($2)
+                                """,
+    "get_by_id_canonical_to_aliases": """SELECT id, data,
+                                EXTRACT(EPOCH FROM create_time)::BIGINT as create_time,
+                                EXTRACT(EPOCH FROM update_time)::BIGINT as update_time
+                                FROM LIGHTRAG_CANONICAL_TO_ALIASES WHERE workspace=$1 AND id=$2
+                               """,
+    "get_by_ids_canonical_to_aliases": """SELECT id, data,
+                                 EXTRACT(EPOCH FROM create_time)::BIGINT as create_time,
+                                 EXTRACT(EPOCH FROM update_time)::BIGINT as update_time
+                                 FROM LIGHTRAG_CANONICAL_TO_ALIASES WHERE workspace=$1 AND id = ANY($2)
+                                """,
+    "get_by_id_entity_resolution_review": """SELECT id, data,
+                                EXTRACT(EPOCH FROM create_time)::BIGINT as create_time,
+                                EXTRACT(EPOCH FROM update_time)::BIGINT as update_time
+                                FROM LIGHTRAG_ENTITY_RESOLUTION_REVIEW WHERE workspace=$1 AND id=$2
+                               """,
+    "get_by_ids_entity_resolution_review": """SELECT id, data,
+                                 EXTRACT(EPOCH FROM create_time)::BIGINT as create_time,
+                                 EXTRACT(EPOCH FROM update_time)::BIGINT as update_time
+                                 FROM LIGHTRAG_ENTITY_RESOLUTION_REVIEW WHERE workspace=$1 AND id = ANY($2)
+                                """,
     "filter_keys": "SELECT id FROM {table_name} WHERE workspace=$1 AND id IN ({ids})",
     "upsert_doc_full": """INSERT INTO LIGHTRAG_DOC_FULL (id, content, doc_name, workspace)
                         VALUES ($1, $2, $3, $4)
@@ -5757,6 +5909,27 @@ SQL_TEMPLATES = {
                       ON CONFLICT (workspace,id) DO UPDATE
                       SET chunk_ids=EXCLUDED.chunk_ids,
                       count=EXCLUDED.count,
+                      update_time = EXCLUDED.update_time
+                     """,
+    "upsert_alias_to_canonical": """INSERT INTO LIGHTRAG_ALIAS_TO_CANONICAL (workspace, id, data,
+                      create_time, update_time)
+                      VALUES ($1, $2, $3, $4, $5)
+                      ON CONFLICT (workspace,id) DO UPDATE
+                      SET data=EXCLUDED.data,
+                      update_time = EXCLUDED.update_time
+                     """,
+    "upsert_canonical_to_aliases": """INSERT INTO LIGHTRAG_CANONICAL_TO_ALIASES (workspace, id, data,
+                      create_time, update_time)
+                      VALUES ($1, $2, $3, $4, $5)
+                      ON CONFLICT (workspace,id) DO UPDATE
+                      SET data=EXCLUDED.data,
+                      update_time = EXCLUDED.update_time
+                     """,
+    "upsert_entity_resolution_review": """INSERT INTO LIGHTRAG_ENTITY_RESOLUTION_REVIEW (workspace, id, data,
+                      create_time, update_time)
+                      VALUES ($1, $2, $3, $4, $5)
+                      ON CONFLICT (workspace,id) DO UPDATE
+                      SET data=EXCLUDED.data,
                       update_time = EXCLUDED.update_time
                      """,
     # SQL for VectorStorage
