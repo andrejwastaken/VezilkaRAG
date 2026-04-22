@@ -298,6 +298,20 @@ async def test_upsert_unknown_namespace_raises():
         await storage.upsert({"k": {"v": 1}})
 
 
+@pytest.mark.asyncio
+async def test_upsert_alias_namespace_with_spaces_resolves():
+    storage = make_storage("alias to canonical")
+    await storage.upsert({"alias-key": {"alias": "A", "canonical_id": "B"}})
+    assert len(storage._captured) == 1
+
+
+@pytest.mark.asyncio
+async def test_upsert_alias_namespace_with_hyphen_and_case_resolves():
+    storage = make_storage("Alias-To-Canonical")
+    await storage.upsert({"alias-key": {"alias": "A", "canonical_id": "B"}})
+    assert len(storage._captured) == 1
+
+
 # ---------------------------------------------------------------------------
 # 11. Multiple records go into one batch when within limit
 # ---------------------------------------------------------------------------

@@ -1914,10 +1914,34 @@ class PGKVStorage(BaseKVStorage):
             await ClientManager.release_client(self.db)
             self.db = None
 
+    @staticmethod
+    def _resolve_template_namespace(namespace: str) -> str:
+        """Resolve namespace variants to a canonical SQL template suffix."""
+        candidate_namespaces = (
+            NameSpace.KV_STORE_FULL_DOCS,
+            NameSpace.KV_STORE_TEXT_CHUNKS,
+            NameSpace.KV_STORE_LLM_RESPONSE_CACHE,
+            NameSpace.KV_STORE_FULL_ENTITIES,
+            NameSpace.KV_STORE_FULL_RELATIONS,
+            NameSpace.KV_STORE_ENTITY_CHUNKS,
+            NameSpace.KV_STORE_RELATION_CHUNKS,
+            NameSpace.KV_STORE_ALIAS_TO_CANONICAL,
+            NameSpace.KV_STORE_CANONICAL_TO_ALIASES,
+            NameSpace.KV_STORE_ENTITY_RESOLUTION_REVIEW,
+        )
+        for candidate in candidate_namespaces:
+            if is_namespace(namespace, candidate):
+                return candidate
+        return namespace
+
     ################ QUERY METHODS ################
     async def get_by_id(self, id: str) -> dict[str, Any] | None:
         """Get data by id."""
-        sql = SQL_TEMPLATES["get_by_id_" + self.namespace]
+        resolved_namespace = self._resolve_template_namespace(self.namespace)
+        sql_template_key = "get_by_id_" + resolved_namespace
+        if sql_template_key not in SQL_TEMPLATES:
+            raise ValueError(f"Unknown namespace: {self.namespace}")
+        sql = SQL_TEMPLATES[sql_template_key]
         params = {"workspace": self.workspace, "id": id}
         response = await self.db.query(sql, list(params.values()))
 
@@ -2053,7 +2077,11 @@ class PGKVStorage(BaseKVStorage):
         if not ids:
             return []
 
-        sql = SQL_TEMPLATES["get_by_ids_" + self.namespace]
+        resolved_namespace = self._resolve_template_namespace(self.namespace)
+        sql_template_key = "get_by_ids_" + resolved_namespace
+        if sql_template_key not in SQL_TEMPLATES:
+            raise ValueError(f"Unknown namespace: {self.namespace}")
+        sql = SQL_TEMPLATES[sql_template_key]
         params = {"workspace": self.workspace, "ids": ids}
         results = await self.db.query(sql, list(params.values()), multirows=True)
 

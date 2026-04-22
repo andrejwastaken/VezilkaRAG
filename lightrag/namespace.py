@@ -25,7 +25,12 @@ class NameSpace:
     DOC_STATUS = "doc_status"
 
 
+def normalize_namespace(namespace: str) -> str:
+    """Normalize namespace variants to the canonical underscore format."""
+    return (namespace or "").strip().lower().replace("-", "_").replace(" ", "_")
+
+
 def is_namespace(namespace: str, base_namespace: str | Iterable[str]):
     if isinstance(base_namespace, str):
-        return namespace.endswith(base_namespace)
+        return normalize_namespace(namespace).endswith(normalize_namespace(base_namespace))
     return any(is_namespace(namespace, ns) for ns in base_namespace)

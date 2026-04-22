@@ -1,3 +1,5 @@
+name: lightrag
+
 services:
   postgres:
     image: gzdaniel/postgres-for-rag:16.6
@@ -10,7 +12,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - lightrag_pgdata:/var/lib/postgresql/data
+      - lightrag_pgdata:/var/lib/postgresql/16/main
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U rag -d rag"]
       interval: 10s
@@ -81,3 +83,4 @@ services:
 
 volumes:
   lightrag_pgdata:
+    name: lightrag_lightrag_pgdata
