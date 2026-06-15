@@ -81,12 +81,33 @@ def _build_batches(
         text = _select_text(doc, prefer_llm_summary)
         if text.strip():
             metadata = doc.get("metadata") or {}
-            source_url = metadata.get("wikipedia_url") or f"wikidata://{doc['qid']}"
+            source_url = _build_source_reference(doc, metadata)
             texts.append(text)
             ids.append(doc["qid"])
             file_paths.append(source_url)
             metadata_by_id[doc["qid"]] = metadata
     return texts, ids, file_paths, metadata_by_id
+
+
+def _build_source_reference(doc: Dict[str, Any], metadata: Dict[str, Any]) -> str:
+    """Build a readable, stable citation string for LightRAG references."""
+    qid = str(doc.get("qid") or metadata.get("qid") or "").strip()
+    title = (
+        str(metadata.get("wikipedia_title") or "").strip()
+        or str(metadata.get("label_en") or "").strip()
+        or str(metadata.get("label_mk") or "").strip()
+        or qid
+    )
+    source = str(metadata.get("wikipedia_source") or metadata.get("source") or "").strip()
+    url = str(metadata.get("wikipedia_url") or "").strip()
+
+    parts = [part for part in (title, qid, source) if part]
+    label = " | ".join(parts) if parts else "unknown source"
+    if url:
+        return f"{label} | {url}"
+    if qid:
+        return f"{label} | wikidata://{qid}"
+    return label
 
 
 def _storage_backends_from_env() -> Dict[str, Any]:
@@ -379,16 +400,18 @@ async def ingest_documents(
         # Phase 4 already prepares bounded ingest chunks, so keep them intact.
         actual_split_by_character_only = True
 
-    await rag.ainsert(
-        texts,
-        split_by_character=actual_split_by,
-        split_by_character_only=actual_split_by_character_only,
-        ids=ids,
-        file_paths=file_paths,
-    )
-    await _persist_doc_metadata(rag, ids, metadata_by_id)
-    await _merge_cross_language_entities(rag, documents)
-    await rag.finalize_storages()
+    try:
+        await rag.ainsert(
+            texts,
+            split_by_character=actual_split_by,
+            split_by_character_only=actual_split_by_character_only,
+            ids=ids,
+            file_paths=file_paths,
+        )
+        await _persist_doc_metadata(rag, ids, metadata_by_id)
+        await _merge_cross_language_entities(rag, documents)
+    finally:
+        await rag.finalize_storages()
 
     print(f"  Ingestion complete.  Storage: {storage}")
 

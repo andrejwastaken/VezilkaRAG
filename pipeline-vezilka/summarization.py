@@ -16,6 +16,7 @@ mix/KG recall.
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -126,6 +127,7 @@ async def summarize_all(
     documents: List[Dict[str, Any]],
     llm_func: Callable,
     max_concurrent: int = 3,
+    checkpoint_path: Optional[Path] = None,
 ) -> List[Dict[str, Any]]:
     """
     Summarize all documents concurrently (max_concurrent at a time).
@@ -138,16 +140,32 @@ async def summarize_all(
         documents:      List of normalized document dicts.
         llm_func:       Async LLM callable.
         max_concurrent: Max simultaneous LLM requests (be polite to rate limits).
+        checkpoint_path: Optional JSON path to update after each document so
+                         overnight runs can resume with completed summaries.
 
     Returns:
         The same list, mutated in-place.
     """
     semaphore = asyncio.Semaphore(max_concurrent)
+    checkpoint_lock = asyncio.Lock()
     total = len(documents)
+
+    async def _checkpoint() -> None:
+        if checkpoint_path is None:
+            return
+        async with checkpoint_lock:
+            checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+            checkpoint_path.write_text(
+                json.dumps(documents, indent=2, ensure_ascii=False),
+                encoding="utf-8",
+            )
 
     async def _bounded(idx: int, doc: Dict[str, Any]) -> None:
         async with semaphore:
             label = doc.get("metadata", {}).get("label_en") or doc["qid"]
+            if doc.get("llm_summary"):
+                print(f"  [{idx:>4}/{total}] Summarizing {label[:50]} … cached")
+                return
             print(f"  [{idx:>4}/{total}] Summarizing {label[:50]} …", end=" ", flush=True)
             summary = await summarize_document(doc, llm_func)
             if summary:
@@ -155,6 +173,7 @@ async def summarize_all(
                 print("OK")
             else:
                 print("(no result)")
+            await _checkpoint()
 
     await asyncio.gather(*[_bounded(i + 1, d) for i, d in enumerate(documents)])
     summarized = sum(1 for d in documents if d.get("llm_summary"))

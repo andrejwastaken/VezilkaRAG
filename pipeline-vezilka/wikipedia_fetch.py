@@ -72,12 +72,35 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = REPO_ROOT / "data"
 
 REQUEST_DELAY = 0.5  # seconds between requests  (polite crawling)
+REQUEST_RETRIES = int(os.getenv("LIGHTRAG_WIKIPEDIA_RETRIES", "4"))
+REQUEST_BACKOFF_SECONDS = float(os.getenv("LIGHTRAG_WIKIPEDIA_BACKOFF_SECONDS", "3"))
 HEADERS = {"User-Agent": "MacedonianCulturePipeline/1.0 (research@example.com)"}
 
 
 # ---------------------------------------------------------------------------
 # Core fetch
 # ---------------------------------------------------------------------------
+
+def _get_with_retries(url: str, **kwargs: Any) -> requests.Response:
+    """GET with retry/backoff for transient HTTP failures."""
+    last_error: Exception | None = None
+    for attempt in range(1, REQUEST_RETRIES + 1):
+        try:
+            resp = requests.get(url, **kwargs)
+            if resp.status_code in {429, 500, 502, 503, 504}:
+                resp.raise_for_status()
+            return resp
+        except requests.RequestException as exc:
+            last_error = exc
+            if attempt >= REQUEST_RETRIES:
+                break
+            sleep_for = REQUEST_BACKOFF_SECONDS * attempt
+            print(f"retry {attempt}/{REQUEST_RETRIES} after {sleep_for:.1f}s: {exc}")
+            time.sleep(sleep_for)
+
+    if last_error:
+        raise last_error
+    raise RuntimeError("Wikipedia request failed without an exception")
 
 def fetch_summary(title: str, lang: str = "mk") -> Optional[str]:
     """
@@ -95,12 +118,14 @@ def fetch_summary(title: str, lang: str = "mk") -> Optional[str]:
     url = template.format(title=encoded)
 
     try:
-        resp = requests.get(url, headers=HEADERS, timeout=15)
+        resp = _get_with_retries(url, headers=HEADERS, timeout=15)
         if resp.status_code == 200:
             extract = resp.json().get("extract", "").strip()
             return extract or None
         return None
-    except Exception:
+    except requests.RequestException as exc:
+        if os.getenv("LIGHTRAG_WIKIPEDIA_STRICT", "true").lower() != "false":
+            raise RuntimeError(f"Failed to fetch Wikipedia summary for {lang}:{title}") from exc
         return None
 
 
@@ -108,7 +133,7 @@ def _fetch_full_text(title: str, lang: str = "mk") -> Optional[dict]:
     """Fetch plaintext article content via MediaWiki action API."""
     api_url = MK_WIKI_API if lang == "mk" else EN_WIKI_API
     try:
-        resp = requests.get(
+        resp = _get_with_retries(
             api_url,
             params={
                 "action": "query",
@@ -138,7 +163,9 @@ def _fetch_full_text(title: str, lang: str = "mk") -> Optional[dict]:
                 "full_text": raw,
             }
         return None
-    except Exception:
+    except requests.RequestException as exc:
+        if os.getenv("LIGHTRAG_WIKIPEDIA_STRICT", "true").lower() != "false":
+            raise RuntimeError(f"Failed to fetch Wikipedia full text for {lang}:{title}") from exc
         return None
 
 

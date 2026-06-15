@@ -19,6 +19,8 @@ import requests
 SPARQL_ENDPOINT = "https://query.wikidata.org/sparql"
 NORTH_MACEDONIA_QID = "Q221"
 REQUEST_DELAY = 2.0
+REQUEST_RETRIES = int(os.getenv("LIGHTRAG_WIKIDATA_RETRIES", "4"))
+REQUEST_BACKOFF_SECONDS = float(os.getenv("LIGHTRAG_WIKIDATA_BACKOFF_SECONDS", "3"))
 LIMIT_PER_CATEGORY = 1 # Adjust this to control how many entities per category are fetched (e.g. 10, 50, 100)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -120,17 +122,33 @@ CATEGORIES: List[Dict[str, Any]] = [
 
 def sparql_query(query: str) -> dict:
     # Execute a SPARQL query against Wikidata and return parsed JSON.
-    resp = requests.get(
-        SPARQL_ENDPOINT,
-        params={"query": query, "format": "json"},
-        headers={
-            "Accept": "application/sparql-results+json",
-            "User-Agent": "MacedonianCulturePipeline/1.0 (research@example.com)",
-        },
-        timeout=60,
-    )
-    resp.raise_for_status()
-    return resp.json()
+    last_error: Exception | None = None
+    for attempt in range(1, REQUEST_RETRIES + 1):
+        try:
+            resp = requests.get(
+                SPARQL_ENDPOINT,
+                params={"query": query, "format": "json"},
+                headers={
+                    "Accept": "application/sparql-results+json",
+                    "User-Agent": "MacedonianCulturePipeline/1.0 (research@example.com)",
+                },
+                timeout=60,
+            )
+            if resp.status_code in {429, 500, 502, 503, 504}:
+                resp.raise_for_status()
+            resp.raise_for_status()
+            return resp.json()
+        except requests.RequestException as exc:
+            last_error = exc
+            if attempt >= REQUEST_RETRIES:
+                break
+            sleep_for = REQUEST_BACKOFF_SECONDS * attempt
+            print(f"retry {attempt}/{REQUEST_RETRIES} after {sleep_for:.1f}s: {exc}")
+            time.sleep(sleep_for)
+
+    if last_error:
+        raise last_error
+    raise RuntimeError("Wikidata request failed without an exception")
 
 
 def _human_query(occupation_qid: str, country_prop: str, limit: int) -> str:
@@ -194,6 +212,7 @@ def discover_entities(
     """
     discovered: set = set()
     categories = _filter_categories(category_names)
+    strict = os.getenv("LIGHTRAG_WIKIDATA_STRICT", "true").lower() != "false"
 
     for cat in categories:
         name = cat["name"]
@@ -215,6 +234,11 @@ def discover_entities(
             print(f"{len(qids):>4} found  (total so far: {len(discovered)})")
         except Exception as exc:
             print(f"ERROR – {exc}")
+            if strict:
+                raise RuntimeError(
+                    f"Discovery failed for category '{name}'. "
+                    "Set LIGHTRAG_WIKIDATA_STRICT=false to skip failed categories."
+                ) from exc
 
         time.sleep(REQUEST_DELAY)
 

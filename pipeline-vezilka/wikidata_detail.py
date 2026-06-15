@@ -11,6 +11,7 @@ Batch size: up to 50 IDs per request (Wikidata hard limit).
 """
 from __future__ import annotations
 
+import os
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -20,6 +21,8 @@ import requests
 WIKIDATA_API = "https://www.wikidata.org/w/api.php"
 BATCH_SIZE = 50
 REQUEST_DELAY = 1.0
+REQUEST_RETRIES = int(os.getenv("LIGHTRAG_WIKIDATA_RETRIES", "4"))
+REQUEST_BACKOFF_SECONDS = float(os.getenv("LIGHTRAG_WIKIDATA_BACKOFF_SECONDS", "3"))
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = REPO_ROOT / "data"
@@ -99,14 +102,30 @@ PROPERTY_MAP: Dict[str, str] = {
 # ---------------------------------------------------------------------------
 def _api_get(params: dict) -> dict:
     # Perform a Wikidata API request with shared defaults and return JSON.
-    resp = requests.get(
-        WIKIDATA_API,
-        params={**params, "format": "json"},
-        headers=HEADERS,
-        timeout=30,
-    )
-    resp.raise_for_status()
-    return resp.json()
+    last_error: Exception | None = None
+    for attempt in range(1, REQUEST_RETRIES + 1):
+        try:
+            resp = requests.get(
+                WIKIDATA_API,
+                params={**params, "format": "json"},
+                headers=HEADERS,
+                timeout=30,
+            )
+            if resp.status_code in {429, 500, 502, 503, 504}:
+                resp.raise_for_status()
+            resp.raise_for_status()
+            return resp.json()
+        except requests.RequestException as exc:
+            last_error = exc
+            if attempt >= REQUEST_RETRIES:
+                break
+            sleep_for = REQUEST_BACKOFF_SECONDS * attempt
+            print(f"retry {attempt}/{REQUEST_RETRIES} after {sleep_for:.1f}s: {exc}")
+            time.sleep(sleep_for)
+
+    if last_error:
+        raise last_error
+    raise RuntimeError("Wikidata API request failed without an exception")
 
 
 def _get_label(entity_data: dict, lang: str = "mk") -> Optional[str]:
@@ -314,6 +333,7 @@ def fetch_all_entities(
     """
     all_entities: Dict[str, Any] = {}
     total = len(qids)
+    strict = os.getenv("LIGHTRAG_WIKIDATA_STRICT", "true").lower() != "false"
 
     for i in range(0, total, BATCH_SIZE):
         batch = qids[i : i + BATCH_SIZE]
@@ -325,6 +345,10 @@ def fetch_all_entities(
             print(f"OK ({len(batch_result)} entities)")
         except Exception as exc:
             print(f"ERROR – {exc}")
+            if strict:
+                raise RuntimeError(
+                    f"Detail expansion failed for QID batch {i + 1}-{end}."
+                ) from exc
         time.sleep(delay)
 
     return all_entities

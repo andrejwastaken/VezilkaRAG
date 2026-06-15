@@ -153,7 +153,12 @@ async def phase5_summarize(docs: list, max_concurrent: int = 3) -> list:
             return docs
 
     from summarization import summarize_all
-    docs = await summarize_all(docs, llm_func, max_concurrent=max_concurrent)
+    docs = await summarize_all(
+        docs,
+        llm_func,
+        max_concurrent=max_concurrent,
+        checkpoint_path=NORMALIZED_DOCS_FILE,
+    )
     _save(NORMALIZED_DOCS_FILE, docs)
     summarized = sum(1 for d in docs if d.get("llm_summary"))
     print(f"Summaries generated: {summarized}/{len(docs)}")
