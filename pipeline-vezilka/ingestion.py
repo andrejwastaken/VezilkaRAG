@@ -171,36 +171,53 @@ async def _merge_cross_language_entities(
     if not merge_pairs:
         return
 
+    try:
+        existing_labels = set(await rag.chunk_entity_relation_graph.get_all_labels())
+    except Exception:
+        existing_labels = None
+
     merged = 0
     skipped = 0
+    total = len(merge_pairs)
+    progress_every = max(
+        1, int(os.getenv("LIGHTRAG_MERGE_PROGRESS_EVERY", "10"))
+    )
 
-    for source_name, target_name in merge_pairs:
+    print(f"  Cross-language entity merge: {total} candidate pairs")
+
+    for idx, (source_name, target_name) in enumerate(merge_pairs, 1):
         try:
-            source_exists = await rag.chunk_entity_relation_graph.has_node(source_name)
-            target_exists = await rag.chunk_entity_relation_graph.has_node(target_name)
-
-            if not source_exists:
+            if existing_labels is not None and source_name not in existing_labels:
                 skipped += 1
+                if idx % progress_every == 0:
+                    print(
+                        "  Cross-language entity merge progress: "
+                        f"{idx}/{total} checked, {merged} merged, {skipped} skipped"
+                    )
                 continue
 
             if source_name == target_name:
                 skipped += 1
                 continue
 
-            target_overrides: Dict[str, Any] = {}
-            if not target_exists:
-                target_overrides["entity_type"] = "concept"
-
             await rag.amerge_entities(
                 source_entities=[source_name],
                 target_entity=target_name,
-                target_entity_data=target_overrides or None,
             )
             merged += 1
+            if existing_labels is not None:
+                existing_labels.discard(source_name)
+                existing_labels.add(target_name)
         except Exception as exc:
             skipped += 1
             print(
                 f"  Cross-language merge skipped for '{source_name}' -> '{target_name}': {exc}"
+            )
+
+        if idx % progress_every == 0:
+            print(
+                "  Cross-language entity merge progress: "
+                f"{idx}/{total} checked, {merged} merged, {skipped} skipped"
             )
 
     print(
@@ -253,6 +270,7 @@ async def ingest_documents(
     split_by_character_only: bool = False,
     llm_func: Optional[Callable] = None,
     embed_func: Optional[Any] = None,
+    merge_only: bool = False,
 ) -> None:
     """
     Insert documents into LightRAG.
@@ -266,6 +284,7 @@ async def ingest_documents(
         split_by_character_only: If True, split only by character boundary and skip token-aware fallback.
         llm_func:           Override default LLM function (gpt_4o_mini_complete).
         embed_func:         Override default embedding function (openai_embed).
+        merge_only:         Skip document insertion and only run cross-language alias merge.
     """
     # ── Import guards ─────────────────────────────────────────────────────────
     try:
@@ -387,6 +406,18 @@ async def ingest_documents(
         await rag.finalize_storages()
         return
 
+    if merge_only:
+        print(
+            f"  Merge-only mode: skipping insert for {len(texts)} documents "
+            "and resuming cross-language entity merge ..."
+        )
+        try:
+            await _merge_cross_language_entities(rag, documents)
+        finally:
+            await rag.finalize_storages()
+        print(f"  Merge-only complete.  Storage: {storage}")
+        return
+
     mode = "llm_summary" if prefer_llm_summary else "structured_text"
     print(
         f"  Inserting {len(texts)} documents  (text mode: {mode}, "
@@ -421,17 +452,38 @@ async def ingest_documents(
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    import argparse
     import json
 
     async def _main() -> None:
+        parser = argparse.ArgumentParser(
+            description="Ingest normalized pipeline documents."
+        )
+        parser.add_argument(
+            "--merge-only",
+            action="store_true",
+            help="Skip insertion and only resume cross-language entity merging.",
+        )
+        args = parser.parse_args()
+
         src = DATA_DIR / "normalized_documents.json"
         if not src.exists():
             print(f"Run normalization.py first to generate {src}.")
             return
         docs = json.loads(src.read_text(encoding="utf-8"))
         print(f"Loaded {len(docs)} documents for ingestion.")
-        split_by = os.getenv("LIGHTRAG_INGEST_SPLIT_BY_CHARACTER", DEFAULT_SPLIT_BY_CHARACTER)
-        split_only = os.getenv("LIGHTRAG_INGEST_SPLIT_BY_CHARACTER_ONLY", "false").lower() == "true"
-        await ingest_documents(docs, split_by_character=split_by, split_by_character_only=split_only)
+        split_by = os.getenv(
+            "LIGHTRAG_INGEST_SPLIT_BY_CHARACTER", DEFAULT_SPLIT_BY_CHARACTER
+        )
+        split_only = (
+            os.getenv("LIGHTRAG_INGEST_SPLIT_BY_CHARACTER_ONLY", "false").lower()
+            == "true"
+        )
+        await ingest_documents(
+            docs,
+            split_by_character=split_by,
+            split_by_character_only=split_only,
+            merge_only=args.merge_only,
+        )
 
     asyncio.run(_main())

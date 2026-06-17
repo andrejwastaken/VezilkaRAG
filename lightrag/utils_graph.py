@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 import asyncio
+import os
 from typing import Any, cast
 
 from .base import DeletionResult
@@ -1239,22 +1240,30 @@ async def _merge_entities_impl(
         }
     target_entity_data = {} if target_entity_data is None else target_entity_data
 
-    # 1. Check if all source entities exist
+    # 1. Check source/target entities and fetch node data in one batch when the
+    # graph backend supports it. PostgreSQL AGE lookups are expensive one-by-one.
+    entity_lookup_ids = list(dict.fromkeys([*source_entities, target_entity]))
+    if hasattr(chunk_entity_relation_graph, "get_nodes_batch"):
+        nodes_data = await chunk_entity_relation_graph.get_nodes_batch(
+            entity_lookup_ids
+        )
+    else:
+        nodes_data = {}
+        for entity_name in entity_lookup_ids:
+            node_data = await chunk_entity_relation_graph.get_node(entity_name)
+            if node_data:
+                nodes_data[entity_name] = node_data
+
     source_entities_data = {}
     for entity_name in source_entities:
-        node_exists = await chunk_entity_relation_graph.has_node(entity_name)
-        if not node_exists:
+        node_data = nodes_data.get(entity_name)
+        if not node_data:
             raise ValueError(f"Source entity '{entity_name}' does not exist")
-        node_data = await chunk_entity_relation_graph.get_node(entity_name)
         source_entities_data[entity_name] = node_data
 
     # 2. Check if target entity exists and get its data if it does
-    target_exists = await chunk_entity_relation_graph.has_node(target_entity)
-    existing_target_entity_data = {}
-    if target_exists:
-        existing_target_entity_data = await chunk_entity_relation_graph.get_node(
-            target_entity
-        )
+    existing_target_entity_data = nodes_data.get(target_entity) or {}
+    target_exists = bool(existing_target_entity_data)
 
     # 3. Merge entity data
     merged_entity_data = _merge_attributes(
@@ -1276,15 +1285,49 @@ async def _merge_entities_impl(
     if target_exists and target_entity not in source_entities:
         entities_to_collect.append(target_entity)
 
+    if hasattr(chunk_entity_relation_graph, "get_nodes_edges_batch"):
+        edges_by_entity = await chunk_entity_relation_graph.get_nodes_edges_batch(
+            entities_to_collect
+        )
+    else:
+        edges_by_entity = {}
+        for entity_name in entities_to_collect:
+            edges_by_entity[entity_name] = (
+                await chunk_entity_relation_graph.get_node_edges(entity_name)
+            ) or []
+
+    edge_pairs: list[dict[str, str]] = []
+    ordered_edge_keys: list[tuple[str, str]] = []
+    seen_edge_keys: set[tuple[str, str]] = set()
     for entity_name in entities_to_collect:
-        # Get all relationships of the entities
-        edges = await chunk_entity_relation_graph.get_node_edges(entity_name)
-        if edges:
-            for src, tgt in edges:
-                # Ensure src is the current entity
-                if src == entity_name:
-                    edge_data = await chunk_entity_relation_graph.get_edge(src, tgt)
-                    all_relations.append((src, tgt, edge_data))
+        for src, tgt in edges_by_entity.get(entity_name) or []:
+            if src == entity_name:
+                edge_key = (src, tgt)
+            elif tgt == entity_name:
+                edge_key = (entity_name, src)
+            else:
+                continue
+            if edge_key in seen_edge_keys:
+                continue
+            seen_edge_keys.add(edge_key)
+            ordered_edge_keys.append(edge_key)
+            edge_pairs.append({"src": edge_key[0], "tgt": edge_key[1]})
+
+    if hasattr(chunk_entity_relation_graph, "get_edges_batch"):
+        edge_data_by_key = await chunk_entity_relation_graph.get_edges_batch(
+            edge_pairs
+        )
+    else:
+        edge_data_by_key = {}
+        for edge_key in ordered_edge_keys:
+            edge_data_by_key[edge_key] = await chunk_entity_relation_graph.get_edge(
+                edge_key[0], edge_key[1]
+            )
+
+    for src, tgt in ordered_edge_keys:
+        edge_data = edge_data_by_key.get((src, tgt))
+        if edge_data:
+            all_relations.append((src, tgt, edge_data))
 
     # 5. Create or update the target entity
     merged_entity_data["entity_id"] = target_entity
@@ -1544,6 +1587,9 @@ async def _merge_entities_impl(
     logger.info(
         f"Entity Merge: successfully merged {len(source_entities)} entities into '{target_entity}'"
     )
+    if os.getenv("LIGHTRAG_MERGE_RETURN_ENTITY_INFO", "false").lower() != "true":
+        return {"entity_name": target_entity, **merged_entity_data}
+
     return await get_entity_info(
         chunk_entity_relation_graph,
         entities_vdb,
