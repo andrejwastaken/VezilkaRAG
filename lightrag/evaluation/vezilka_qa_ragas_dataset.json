@@ -1,0 +1,2668 @@
+{
+  "test_cases": [
+    {
+      "id": "VZ-QA-001",
+      "question": "What is Ishak Bey Mosque in the Vezilka corpus?",
+      "ground_truth": "Ishak Bey Mosque is described as mosque in Macedonia; its instance type is џамија.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1009860",
+          "label_en": "Ishak Bey Mosque",
+          "label_mk": "Исхак-бегова џамија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%98%D1%81%D1%85%D0%B0%D0%BA-%D0%B1%D0%B5%D0%B3%D0%BE%D0%B2%D0%B0_%D1%9F%D0%B0%D0%BC%D0%B8%D1%98%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Ishak Bey Mosque — mosque in Macedonia."
+      ]
+    },
+    {
+      "id": "VZ-QA-002",
+      "question": "What is Šarena Mosque in the Vezilka corpus?",
+      "ground_truth": "Šarena Mosque is described as mosque in Tetovo, North Macedonia; its instance type is џамија.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1009896",
+          "label_en": "Šarena Mosque",
+          "label_mk": "Шарена џамија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A8%D0%B0%D1%80%D0%B5%D0%BD%D0%B0_%D1%9F%D0%B0%D0%BC%D0%B8%D1%98%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Šarena Mosque — mosque in Tetovo, North Macedonia."
+      ]
+    },
+    {
+      "id": "VZ-QA-003",
+      "question": "What is Ljubiša Georgievski in the Vezilka corpus?",
+      "ground_truth": "Ljubiša Georgievski is described as Macedonian politician (1937-2018); its instance type is човек.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1023595",
+          "label_en": "Ljubiša Georgievski",
+          "label_mk": "Љубиша Георгиевски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%89%D1%83%D0%B1%D0%B8%D1%88%D0%B0_%D0%93%D0%B5%D0%BE%D1%80%D0%B3%D0%B8%D0%B5%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Ljubiša Georgievski — Macedonian politician (1937-2018)."
+      ]
+    },
+    {
+      "id": "VZ-QA-004",
+      "question": "What is Jasin Ferati in the Vezilka corpus?",
+      "ground_truth": "Jasin Ferati is described as Swiss racing driver; its instance type is човек.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q106634862",
+          "label_en": "Jasin Ferati",
+          "label_mk": "Jasin Ferati",
+          "wikipedia_url": "https://en.wikipedia.org/wiki/Jasin_Ferati"
+        }
+      ],
+      "evidence": [
+        "Jasin Ferati — Swiss racing driver."
+      ]
+    },
+    {
+      "id": "VZ-QA-005",
+      "question": "What is Puleksenija Jovanoska in the Vezilka corpus?",
+      "ground_truth": "Puleksenija Jovanoska is described as North Macedonian karateka; its instance type is човек.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q107442773",
+          "label_en": "Puleksenija Jovanoska",
+          "label_mk": "Пулексенија Јовановска",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9F%D1%83%D0%BB%D0%B5%D0%BA%D1%81%D0%B5%D0%BD%D0%B8%D1%98%D0%B0_%D0%88%D0%BE%D0%B2%D0%B0%D0%BD%D0%BE%D0%B2%D1%81%D0%BA%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Puleksenija Jovanoska — North Macedonian karateka."
+      ]
+    },
+    {
+      "id": "VZ-QA-006",
+      "question": "What is Žarko Bašeski in the Vezilka corpus?",
+      "ground_truth": "Žarko Bašeski is described as Macedonian artist; its instance type is човек.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1091325",
+          "label_en": "Žarko Bašeski",
+          "label_mk": "Жарко Башески",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%96%D0%B0%D1%80%D0%BA%D0%BE_%D0%91%D0%B0%D1%88%D0%B5%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Žarko Bašeski — Macedonian artist."
+      ]
+    },
+    {
+      "id": "VZ-QA-007",
+      "question": "What is Cinematheque of Macedonia in the Vezilka corpus?",
+      "ground_truth": "Cinematheque of Macedonia is a cultural entity from North Macedonia.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q110132018",
+          "label_en": "Cinematheque of Macedonia",
+          "label_mk": "Кинотека на Македонија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9A%D0%B8%D0%BD%D0%BE%D1%82%D0%B5%D0%BA%D0%B0_%D0%BD%D0%B0_%D0%9C%D0%B0%D0%BA%D0%B5%D0%B4%D0%BE%D0%BD%D0%B8%D1%98%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Cinematheque of Macedonia is a cultural entity from North Macedonia."
+      ]
+    },
+    {
+      "id": "VZ-QA-008",
+      "question": "What is Stiv Naumov Memorial House in the Vezilka corpus?",
+      "ground_truth": "Stiv Naumov Memorial House is a cultural entity from North Macedonia.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q110132368",
+          "label_en": "Stiv Naumov Memorial House",
+          "label_mk": "Меморијален музеј „Стив Наумов“",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9C%D0%B5%D0%BC%D0%BE%D1%80%D0%B8%D1%98%D0%B0%D0%BB%D0%B5%D0%BD_%D0%BC%D1%83%D0%B7%D0%B5%D1%98_%E2%80%9E%D0%A1%D1%82%D0%B8%D0%B2_%D0%9D%D0%B0%D1%83%D0%BC%D0%BE%D0%B2%E2%80%9C"
+        }
+      ],
+      "evidence": [
+        "Stiv Naumov Memorial House is a cultural entity from North Macedonia."
+      ]
+    },
+    {
+      "id": "VZ-QA-009",
+      "question": "What is Под Вавилон – задачата на преведувачот in the Vezilka corpus?",
+      "ground_truth": "Под Вавилон – задачата на преведувачот is described as книга стручна монографија од Драги Михајловски; its instance type is книга.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q111709943",
+          "label_en": null,
+          "label_mk": "Под Вавилон – задачата на преведувачот",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9F%D0%BE%D0%B4_%D0%92%D0%B0%D0%B2%D0%B8%D0%BB%D0%BE%D0%BD_%E2%80%93_%D0%B7%D0%B0%D0%B4%D0%B0%D1%87%D0%B0%D1%82%D0%B0_%D0%BD%D0%B0_%D0%BF%D1%80%D0%B5%D0%B2%D0%B5%D0%B4%D1%83%D0%B2%D0%B0%D1%87%D0%BE%D1%82"
+        }
+      ],
+      "evidence": [
+        "Под Вавилон – задачата на преведувачот — книга стручна монографија од Драги Михајловски."
+      ]
+    },
+    {
+      "id": "VZ-QA-010",
+      "question": "What is Сиромавиот и чучурлигата in the Vezilka corpus?",
+      "ground_truth": "Сиромавиот и чучурлигата is described as книга за деца од Драги Михајловски; its instance type is книга.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q111710018",
+          "label_en": null,
+          "label_mk": "Сиромавиот и чучурлигата",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A1%D0%B8%D1%80%D0%BE%D0%BC%D0%B0%D0%B2%D0%B8%D0%BE%D1%82_%D0%B8_%D1%87%D1%83%D1%87%D1%83%D1%80%D0%BB%D0%B8%D0%B3%D0%B0%D1%82%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Сиромавиот и чучурлигата — книга за деца од Драги Михајловски."
+      ]
+    },
+    {
+      "id": "VZ-QA-011",
+      "question": "What is Волшебното котле и други бајки in the Vezilka corpus?",
+      "ground_truth": "Волшебното котле и други бајки is described as Дела на Драги Михајловски; its instance type is книга.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q111710035",
+          "label_en": null,
+          "label_mk": "Волшебното котле и други бајки",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%92%D0%BE%D0%BB%D1%88%D0%B5%D0%B1%D0%BD%D0%BE%D1%82%D0%BE_%D0%BA%D0%BE%D1%82%D0%BB%D0%B5_%D0%B8_%D0%B4%D1%80%D1%83%D0%B3%D0%B8_%D0%B1%D0%B0%D1%98%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Волшебното котле и други бајки — Дела на Драги Михајловски."
+      ]
+    },
+    {
+      "id": "VZ-QA-012",
+      "question": "What is Должници in the Vezilka corpus?",
+      "ground_truth": "Должници is described as роман од Драги Михајловски; its instance type is книга.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q111710076",
+          "label_en": null,
+          "label_mk": "Должници",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%94%D0%BE%D0%BB%D0%B6%D0%BD%D0%B8%D1%86%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Должници — роман од Драги Михајловски."
+      ]
+    },
+    {
+      "id": "VZ-QA-013",
+      "question": "What is Раскази и споредбени коментари in the Vezilka corpus?",
+      "ground_truth": "Раскази и споредбени коментари is described as збирка раскази од Драги Михајловски; its instance type is книга.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q111710087",
+          "label_en": null,
+          "label_mk": "Раскази и споредбени коментари",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A0%D0%B0%D1%81%D0%BA%D0%B0%D0%B7%D0%B8_%D0%B8_%D1%81%D0%BF%D0%BE%D1%80%D0%B5%D0%B4%D0%B1%D0%B5%D0%BD%D0%B8_%D0%BA%D0%BE%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%80%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Раскази и споредбени коментари — збирка раскази од Драги Михајловски."
+      ]
+    },
+    {
+      "id": "VZ-QA-014",
+      "question": "What is Страјк in the Vezilka corpus?",
+      "ground_truth": "Страјк is described as North Macedonian disc jockey, graffiti artist, and rapper; its instance type is човек.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q113686260",
+          "label_en": null,
+          "label_mk": "Страјк",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A1%D1%82%D1%80%D0%B0%D1%98%D0%BA"
+        }
+      ],
+      "evidence": [
+        "Страјк — North Macedonian disc jockey, graffiti artist, and rapper."
+      ]
+    },
+    {
+      "id": "VZ-QA-015",
+      "question": "What is Синагога Арагон (Битола) in the Vezilka corpus?",
+      "ground_truth": "Синагога Арагон (Битола) is described as поранешна синагога во Битола; its instance type is синагога.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q114245520",
+          "label_en": null,
+          "label_mk": "Синагога Арагон (Битола)",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A1%D0%B8%D0%BD%D0%B0%D0%B3%D0%BE%D0%B3%D0%B0_%D0%90%D1%80%D0%B0%D0%B3%D0%BE%D0%BD_%28%D0%91%D0%B8%D1%82%D0%BE%D0%BB%D0%B0%29"
+        }
+      ],
+      "evidence": [
+        "Синагога Арагон (Битола) — поранешна синагога во Битола."
+      ]
+    },
+    {
+      "id": "VZ-QA-016",
+      "question": "What is Funk Shui in the Vezilka corpus?",
+      "ground_truth": "Funk Shui is described as Macedonian rock band; its instance type is rock band.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q114245674",
+          "label_en": "Funk Shui",
+          "label_mk": "Funk Shui",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A4%D0%B0%D0%BD%D0%BA_%D0%A8%D1%83%D0%B8_%28%D0%BC%D1%83%D0%B7%D0%B8%D1%87%D0%BA%D0%B0_%D0%B3%D1%80%D1%83%D0%BF%D0%B0%29"
+        }
+      ],
+      "evidence": [
+        "Funk Shui — Macedonian rock band."
+      ]
+    },
+    {
+      "id": "VZ-QA-017",
+      "question": "What is Angel Gavrovski in the Vezilka corpus?",
+      "ground_truth": "Angel Gavrovski is described as Macedonian artist; its instance type is човек.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1150748",
+          "label_en": "Angel Gavrovski",
+          "label_mk": "Ангел Гавровски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%90%D0%BD%D0%B3%D0%B5%D0%BB_%D0%93%D0%B0%D0%B2%D1%80%D0%BE%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Angel Gavrovski — Macedonian artist."
+      ]
+    },
+    {
+      "id": "VZ-QA-018",
+      "question": "What is Xsoundbeatz in the Vezilka corpus?",
+      "ground_truth": "Xsoundbeatz is described as Macedonian-Albanian producer; its instance type is човек.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / single-chunk factual",
+      "answer_type": "short entity description",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q115193816",
+          "label_en": "Xsoundbeatz",
+          "label_mk": "Xsoundbeatz",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/Xsoundbeatz"
+        }
+      ],
+      "evidence": [
+        "Xsoundbeatz — Macedonian-Albanian producer."
+      ]
+    },
+    {
+      "id": "VZ-QA-019",
+      "question": "Which English/Latin entity label corresponds to the Macedonian label Исхак-бегова џамија?",
+      "ground_truth": "Исхак-бегова џамија corresponds to Ishak Bey Mosque.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop bilingual alias",
+      "answer_type": "alias mapping",
+      "recommended_lightrag_modes": [
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1009860",
+          "label_en": "Ishak Bey Mosque",
+          "label_mk": "Исхак-бегова џамија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%98%D1%81%D1%85%D0%B0%D0%BA-%D0%B1%D0%B5%D0%B3%D0%BE%D0%B2%D0%B0_%D1%9F%D0%B0%D0%BC%D0%B8%D1%98%D0%B0"
+        }
+      ],
+      "evidence": [
+        "aliases: Исхак-бегова џамија, Ishak Bey Mosque"
+      ]
+    },
+    {
+      "id": "VZ-QA-020",
+      "question": "Which English/Latin entity label corresponds to the Macedonian label Шарена џамија?",
+      "ground_truth": "Шарена џамија corresponds to Šarena Mosque.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop bilingual alias",
+      "answer_type": "alias mapping",
+      "recommended_lightrag_modes": [
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1009896",
+          "label_en": "Šarena Mosque",
+          "label_mk": "Шарена џамија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A8%D0%B0%D1%80%D0%B5%D0%BD%D0%B0_%D1%9F%D0%B0%D0%BC%D0%B8%D1%98%D0%B0"
+        }
+      ],
+      "evidence": [
+        "aliases: Шарена џамија, Šarena Mosque"
+      ]
+    },
+    {
+      "id": "VZ-QA-021",
+      "question": "Which English/Latin entity label corresponds to the Macedonian label Љубиша Георгиевски?",
+      "ground_truth": "Љубиша Георгиевски corresponds to Ljubiša Georgievski.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop bilingual alias",
+      "answer_type": "alias mapping",
+      "recommended_lightrag_modes": [
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1023595",
+          "label_en": "Ljubiša Georgievski",
+          "label_mk": "Љубиша Георгиевски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%89%D1%83%D0%B1%D0%B8%D1%88%D0%B0_%D0%93%D0%B5%D0%BE%D1%80%D0%B3%D0%B8%D0%B5%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "aliases: Љубиша Георгиевски, Ljubiša Georgievski"
+      ]
+    },
+    {
+      "id": "VZ-QA-022",
+      "question": "Which English/Latin entity label corresponds to the Macedonian label Пулексенија Јовановска?",
+      "ground_truth": "Пулексенија Јовановска corresponds to Puleksenija Jovanoska.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop bilingual alias",
+      "answer_type": "alias mapping",
+      "recommended_lightrag_modes": [
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q107442773",
+          "label_en": "Puleksenija Jovanoska",
+          "label_mk": "Пулексенија Јовановска",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9F%D1%83%D0%BB%D0%B5%D0%BA%D1%81%D0%B5%D0%BD%D0%B8%D1%98%D0%B0_%D0%88%D0%BE%D0%B2%D0%B0%D0%BD%D0%BE%D0%B2%D1%81%D0%BA%D0%B0"
+        }
+      ],
+      "evidence": [
+        "aliases: Пулексенија Јовановска, Puleksenija Jovanoska"
+      ]
+    },
+    {
+      "id": "VZ-QA-023",
+      "question": "Which English/Latin entity label corresponds to the Macedonian label Жарко Башески?",
+      "ground_truth": "Жарко Башески corresponds to Žarko Bašeski.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop bilingual alias",
+      "answer_type": "alias mapping",
+      "recommended_lightrag_modes": [
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1091325",
+          "label_en": "Žarko Bašeski",
+          "label_mk": "Жарко Башески",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%96%D0%B0%D1%80%D0%BA%D0%BE_%D0%91%D0%B0%D1%88%D0%B5%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "aliases: Жарко Башески, Žarko Bašeski"
+      ]
+    },
+    {
+      "id": "VZ-QA-024",
+      "question": "Which English/Latin entity label corresponds to the Macedonian label Кинотека на Македонија?",
+      "ground_truth": "Кинотека на Македонија corresponds to Cinematheque of Macedonia.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop bilingual alias",
+      "answer_type": "alias mapping",
+      "recommended_lightrag_modes": [
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q110132018",
+          "label_en": "Cinematheque of Macedonia",
+          "label_mk": "Кинотека на Македонија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9A%D0%B8%D0%BD%D0%BE%D1%82%D0%B5%D0%BA%D0%B0_%D0%BD%D0%B0_%D0%9C%D0%B0%D0%BA%D0%B5%D0%B4%D0%BE%D0%BD%D0%B8%D1%98%D0%B0"
+        }
+      ],
+      "evidence": [
+        "aliases: Кинотека на Македонија, Cinematheque of Macedonia"
+      ]
+    },
+    {
+      "id": "VZ-QA-025",
+      "question": "Which English/Latin entity label corresponds to the Macedonian label Меморијален музеј „Стив Наумов“?",
+      "ground_truth": "Меморијален музеј „Стив Наумов“ corresponds to Stiv Naumov Memorial House.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop bilingual alias",
+      "answer_type": "alias mapping",
+      "recommended_lightrag_modes": [
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q110132368",
+          "label_en": "Stiv Naumov Memorial House",
+          "label_mk": "Меморијален музеј „Стив Наумов“",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9C%D0%B5%D0%BC%D0%BE%D1%80%D0%B8%D1%98%D0%B0%D0%BB%D0%B5%D0%BD_%D0%BC%D1%83%D0%B7%D0%B5%D1%98_%E2%80%9E%D0%A1%D1%82%D0%B8%D0%B2_%D0%9D%D0%B0%D1%83%D0%BC%D0%BE%D0%B2%E2%80%9C"
+        }
+      ],
+      "evidence": [
+        "aliases: Меморијален музеј „Стив Наумов“, Stiv Naumov Memorial House"
+      ]
+    },
+    {
+      "id": "VZ-QA-026",
+      "question": "Which English/Latin entity label corresponds to the Macedonian label Ангел Гавровски?",
+      "ground_truth": "Ангел Гавровски corresponds to Angel Gavrovski.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop bilingual alias",
+      "answer_type": "alias mapping",
+      "recommended_lightrag_modes": [
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1150748",
+          "label_en": "Angel Gavrovski",
+          "label_mk": "Ангел Гавровски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%90%D0%BD%D0%B3%D0%B5%D0%BB_%D0%93%D0%B0%D0%B2%D1%80%D0%BE%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "aliases: Ангел Гавровски, Angel Gavrovski"
+      ]
+    },
+    {
+      "id": "VZ-QA-027",
+      "question": "Which English/Latin entity label corresponds to the Macedonian label Ѓорѓи Филиповски?",
+      "ground_truth": "Ѓорѓи Филиповски corresponds to Gjorgji Filipovski.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop bilingual alias",
+      "answer_type": "alias mapping",
+      "recommended_lightrag_modes": [
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q11527866",
+          "label_en": "Gjorgji Filipovski",
+          "label_mk": "Ѓорѓи Филиповски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%83%D0%BE%D1%80%D1%93%D0%B8_%D0%A4%D0%B8%D0%BB%D0%B8%D0%BF%D0%BE%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "aliases: Ѓорѓи Филиповски, Gjorgji Filipovski"
+      ]
+    },
+    {
+      "id": "VZ-QA-028",
+      "question": "Which English/Latin entity label corresponds to the Macedonian label Црква „Пресвето Срце Исусово“ - Скопје?",
+      "ground_truth": "Црква „Пресвето Срце Исусово“ - Скопје corresponds to Cathedral of the Sacred Heart of Jesus.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop bilingual alias",
+      "answer_type": "alias mapping",
+      "recommended_lightrag_modes": [
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q11737299",
+          "label_en": "Cathedral of the Sacred Heart of Jesus",
+          "label_mk": "Црква „Пресвето Срце Исусово“ - Скопје",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A6%D1%80%D0%BA%D0%B2%D0%B0_%E2%80%9E%D0%9F%D1%80%D0%B5%D1%81%D0%B2%D0%B5%D1%82%D0%BE_%D0%A1%D1%80%D1%86%D0%B5_%D0%98%D1%81%D1%83%D1%81%D0%BE%D0%B2%D0%BE%E2%80%9C_-_%D0%A1%D0%BA%D0%BE%D0%BF%D1%98%D0%B5"
+        }
+      ],
+      "evidence": [
+        "aliases: Црква „Пресвето Срце Исусово“ - Скопје, Cathedral of the Sacred Heart of Jesus"
+      ]
+    },
+    {
+      "id": "VZ-QA-029",
+      "question": "Which English/Latin entity label corresponds to the Macedonian label Анастасија Балтова?",
+      "ground_truth": "Анастасија Балтова corresponds to Anastasija Baltova.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop bilingual alias",
+      "answer_type": "alias mapping",
+      "recommended_lightrag_modes": [
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q12271806",
+          "label_en": "Anastasija Baltova",
+          "label_mk": "Анастасија Балтова",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%90%D0%BD%D0%B0%D1%81%D1%82%D0%B0%D1%81%D0%B8%D1%98%D0%B0_%D0%91%D0%B0%D0%BB%D1%82%D0%BE%D0%B2%D0%B0"
+        }
+      ],
+      "evidence": [
+        "aliases: Анастасија Балтова, Anastasija Baltova"
+      ]
+    },
+    {
+      "id": "VZ-QA-030",
+      "question": "Which English/Latin entity label corresponds to the Macedonian label Борис Чипан?",
+      "ground_truth": "Борис Чипан corresponds to Boris Čipan.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop bilingual alias",
+      "answer_type": "alias mapping",
+      "recommended_lightrag_modes": [
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q12273756",
+          "label_en": "Boris Čipan",
+          "label_mk": "Борис Чипан",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%91%D0%BE%D1%80%D0%B8%D1%81_%D0%A7%D0%B8%D0%BF%D0%B0%D0%BD"
+        }
+      ],
+      "evidence": [
+        "aliases: Борис Чипан, Boris Čipan"
+      ]
+    },
+    {
+      "id": "VZ-QA-031",
+      "question": "What biographical date or life-detail is stated for Ljubiša Georgievski?",
+      "ground_truth": "Ljubiša Georgievski was born on 1937-05-30.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "date/place biographical fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1023595",
+          "label_en": "Ljubiša Georgievski",
+          "label_mk": "Љубиша Георгиевски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%89%D1%83%D0%B1%D0%B8%D1%88%D0%B0_%D0%93%D0%B5%D0%BE%D1%80%D0%B3%D0%B8%D0%B5%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Ljubiša Georgievski was born on 1937-05-30."
+      ]
+    },
+    {
+      "id": "VZ-QA-032",
+      "question": "What biographical date or life-detail is stated for Jasin Ferati?",
+      "ground_truth": "Jasin Ferati (born 2 August 2003) is a Swiss racing driver with Macedonian Albanian parents from Gostivar.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "date/place biographical fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q106634862",
+          "label_en": "Jasin Ferati",
+          "label_mk": "Jasin Ferati",
+          "wikipedia_url": "https://en.wikipedia.org/wiki/Jasin_Ferati"
+        }
+      ],
+      "evidence": [
+        "Jasin Ferati (born 2 August 2003) is a Swiss racing driver with Macedonian Albanian parents from Gostivar."
+      ]
+    },
+    {
+      "id": "VZ-QA-033",
+      "question": "What biographical date or life-detail is stated for Puleksenija Jovanoska?",
+      "ground_truth": "Puleksenija Jovanoska was born on 1993-07-11.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "date/place biographical fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q107442773",
+          "label_en": "Puleksenija Jovanoska",
+          "label_mk": "Пулексенија Јовановска",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9F%D1%83%D0%BB%D0%B5%D0%BA%D1%81%D0%B5%D0%BD%D0%B8%D1%98%D0%B0_%D0%88%D0%BE%D0%B2%D0%B0%D0%BD%D0%BE%D0%B2%D1%81%D0%BA%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Puleksenija Jovanoska was born on 1993-07-11."
+      ]
+    },
+    {
+      "id": "VZ-QA-034",
+      "question": "What biographical date or life-detail is stated for Žarko Bašeski?",
+      "ground_truth": "Животопис Башески е роден во Прилеп на 11 август 1957 година.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "date/place biographical fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1091325",
+          "label_en": "Žarko Bašeski",
+          "label_mk": "Жарко Башески",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%96%D0%B0%D1%80%D0%BA%D0%BE_%D0%91%D0%B0%D1%88%D0%B5%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Животопис Башески е роден во Прилеп на 11 август 1957 година."
+      ]
+    },
+    {
+      "id": "VZ-QA-035",
+      "question": "What biographical date or life-detail is stated for Angel Gavrovski?",
+      "ground_truth": "Ангел Гавровски (25 јуни 1942) — познат македонски сликар. [1] Животопис Гавровски е роден на 25 јуни 1942 година во тетовското село Жилче.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "date/place biographical fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1150748",
+          "label_en": "Angel Gavrovski",
+          "label_mk": "Ангел Гавровски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%90%D0%BD%D0%B3%D0%B5%D0%BB_%D0%93%D0%B0%D0%B2%D1%80%D0%BE%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Ангел Гавровски (25 јуни 1942) — познат македонски сликар. [1] Животопис Гавровски е роден на 25 јуни 1942 година во тетовското село Жилче."
+      ]
+    },
+    {
+      "id": "VZ-QA-036",
+      "question": "What biographical date or life-detail is stated for Xsoundbeatz?",
+      "ground_truth": "Животопис Ментор Зенула е роден во албанско семејство во Скопје.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "date/place biographical fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q115193816",
+          "label_en": "Xsoundbeatz",
+          "label_mk": "Xsoundbeatz",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/Xsoundbeatz"
+        }
+      ],
+      "evidence": [
+        "Животопис Ментор Зенула е роден во албанско семејство во Скопје."
+      ]
+    },
+    {
+      "id": "VZ-QA-037",
+      "question": "What biographical date or life-detail is stated for Gjorgji Filipovski?",
+      "ground_truth": "Gjorgji Filipovski was born on 1919-05-06.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "date/place biographical fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q11527866",
+          "label_en": "Gjorgji Filipovski",
+          "label_mk": "Ѓорѓи Филиповски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%83%D0%BE%D1%80%D1%93%D0%B8_%D0%A4%D0%B8%D0%BB%D0%B8%D0%BF%D0%BE%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Gjorgji Filipovski was born on 1919-05-06."
+      ]
+    },
+    {
+      "id": "VZ-QA-038",
+      "question": "Where is Ishak Bey Mosque located or situated according to the corpus?",
+      "ground_truth": "Исхак-беговата џамија, позната и како Шарена џамија (Алаџа-џамија) — џамија во Скопје којашто се наоѓа во непосредна близина на пазариштето Бит-пазар. Изградена е по наредба на вториот отомански управител на градот, Исхак-бег, во 1438 година.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "location fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1009860",
+          "label_en": "Ishak Bey Mosque",
+          "label_mk": "Исхак-бегова џамија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%98%D1%81%D1%85%D0%B0%D0%BA-%D0%B1%D0%B5%D0%B3%D0%BE%D0%B2%D0%B0_%D1%9F%D0%B0%D0%BC%D0%B8%D1%98%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Исхак-беговата џамија, позната и како Шарена џамија (Алаџа-џамија) — џамија во Скопје којашто се наоѓа во непосредна близина на пазариштето Бит-пазар. Изградена е по наредба на вториот отомански управител на градот, Исхак-бег, во 1438 година."
+      ]
+    },
+    {
+      "id": "VZ-QA-039",
+      "question": "Where is Šarena Mosque located or situated according to the corpus?",
+      "ground_truth": "Шарената џамија — позната живописна џамија во градот Тетово, Македонија.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "location fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1009896",
+          "label_en": "Šarena Mosque",
+          "label_mk": "Шарена џамија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A8%D0%B0%D1%80%D0%B5%D0%BD%D0%B0_%D1%9F%D0%B0%D0%BC%D0%B8%D1%98%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Шарената џамија — позната живописна џамија во градот Тетово, Македонија."
+      ]
+    },
+    {
+      "id": "VZ-QA-040",
+      "question": "Where is Cinematheque of Macedonia located or situated according to the corpus?",
+      "ground_truth": "Cinematheque of Macedonia is located in Скопје.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "location fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q110132018",
+          "label_en": "Cinematheque of Macedonia",
+          "label_mk": "Кинотека на Македонија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9A%D0%B8%D0%BD%D0%BE%D1%82%D0%B5%D0%BA%D0%B0_%D0%BD%D0%B0_%D0%9C%D0%B0%D0%BA%D0%B5%D0%B4%D0%BE%D0%BD%D0%B8%D1%98%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Cinematheque of Macedonia is located in Скопје."
+      ]
+    },
+    {
+      "id": "VZ-QA-041",
+      "question": "Where is Stiv Naumov Memorial House located or situated according to the corpus?",
+      "ground_truth": "Меморијалниот музеј „Стив Наумов“ — меморијален музеј и спомен-куќа во градот Битола, посветена на македонскиот револуционер Стефан Наумов-Стив.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "location fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q110132368",
+          "label_en": "Stiv Naumov Memorial House",
+          "label_mk": "Меморијален музеј „Стив Наумов“",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9C%D0%B5%D0%BC%D0%BE%D1%80%D0%B8%D1%98%D0%B0%D0%BB%D0%B5%D0%BD_%D0%BC%D1%83%D0%B7%D0%B5%D1%98_%E2%80%9E%D0%A1%D1%82%D0%B8%D0%B2_%D0%9D%D0%B0%D1%83%D0%BC%D0%BE%D0%B2%E2%80%9C"
+        }
+      ],
+      "evidence": [
+        "Меморијалниот музеј „Стив Наумов“ — меморијален музеј и спомен-куќа во градот Битола, посветена на македонскиот револуционер Стефан Наумов-Стив."
+      ]
+    },
+    {
+      "id": "VZ-QA-042",
+      "question": "Where is Синагога Арагон (Битола) located or situated according to the corpus?",
+      "ground_truth": "Синагога Арагон (Битола) is located in Општина Битола.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "location fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q114245520",
+          "label_en": null,
+          "label_mk": "Синагога Арагон (Битола)",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A1%D0%B8%D0%BD%D0%B0%D0%B3%D0%BE%D0%B3%D0%B0_%D0%90%D1%80%D0%B0%D0%B3%D0%BE%D0%BD_%28%D0%91%D0%B8%D1%82%D0%BE%D0%BB%D0%B0%29"
+        }
+      ],
+      "evidence": [
+        "Синагога Арагон (Битола) is located in Општина Битола."
+      ]
+    },
+    {
+      "id": "VZ-QA-043",
+      "question": "Where is Xsoundbeatz located or situated according to the corpus?",
+      "ground_truth": "Неговото студио се наоѓа во скопското село Трубарево, од каде потекнува.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "location fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q115193816",
+          "label_en": "Xsoundbeatz",
+          "label_mk": "Xsoundbeatz",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/Xsoundbeatz"
+        }
+      ],
+      "evidence": [
+        "Неговото студио се наоѓа во скопското село Трубарево, од каде потекнува."
+      ]
+    },
+    {
+      "id": "VZ-QA-044",
+      "question": "Where is Cathedral of the Sacred Heart of Jesus located or situated according to the corpus?",
+      "ground_truth": "Црквата „Пресвето Срце Исусово“ е католички храм кој се наоѓа во Скопје, Македонија.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "location fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q11737299",
+          "label_en": "Cathedral of the Sacred Heart of Jesus",
+          "label_mk": "Црква „Пресвето Срце Исусово“ - Скопје",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A6%D1%80%D0%BA%D0%B2%D0%B0_%E2%80%9E%D0%9F%D1%80%D0%B5%D1%81%D0%B2%D0%B5%D1%82%D0%BE_%D0%A1%D1%80%D1%86%D0%B5_%D0%98%D1%81%D1%83%D1%81%D0%BE%D0%B2%D0%BE%E2%80%9C_-_%D0%A1%D0%BA%D0%BE%D0%BF%D1%98%D0%B5"
+        }
+      ],
+      "evidence": [
+        "Црквата „Пресвето Срце Исусово“ е католички храм кој се наоѓа во Скопје, Македонија."
+      ]
+    },
+    {
+      "id": "VZ-QA-045",
+      "question": "What construction or foundation detail is stated for Ishak Bey Mosque?",
+      "ground_truth": "Исхак-беговата џамија, позната и како Шарена џамија (Алаџа-џамија) — џамија во Скопје којашто се наоѓа во непосредна близина на пазариштето Бит-пазар. Изградена е по наредба на вториот отомански управител на градот, Исхак-бег, во 1438 година.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "historical date/event fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1009860",
+          "label_en": "Ishak Bey Mosque",
+          "label_mk": "Исхак-бегова џамија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%98%D1%81%D1%85%D0%B0%D0%BA-%D0%B1%D0%B5%D0%B3%D0%BE%D0%B2%D0%B0_%D1%9F%D0%B0%D0%BC%D0%B8%D1%98%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Исхак-беговата џамија, позната и како Шарена џамија (Алаџа-џамија) — џамија во Скопје којашто се наоѓа во непосредна близина на пазариштето Бит-пазар. Изградена е по наредба на вториот отомански управител на градот, Исхак-бег, во 1438 година."
+      ]
+    },
+    {
+      "id": "VZ-QA-046",
+      "question": "What construction or foundation detail is stated for Šarena Mosque?",
+      "ground_truth": "Историја На десниот брег на реката Пена во градот Тетово во XV век е подигната џамија.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "historical date/event fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1009896",
+          "label_en": "Šarena Mosque",
+          "label_mk": "Шарена џамија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A8%D0%B0%D1%80%D0%B5%D0%BD%D0%B0_%D1%9F%D0%B0%D0%BC%D0%B8%D1%98%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Историја На десниот брег на реката Пена во градот Тетово во XV век е подигната џамија."
+      ]
+    },
+    {
+      "id": "VZ-QA-047",
+      "question": "What construction or foundation detail is stated for Cathedral of the Sacred Heart of Jesus?",
+      "ground_truth": "Црквата била изградена во 1977 година, а нејзин архитект е Благоја Мицковски.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "historical date/event fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q11737299",
+          "label_en": "Cathedral of the Sacred Heart of Jesus",
+          "label_mk": "Црква „Пресвето Срце Исусово“ - Скопје",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A6%D1%80%D0%BA%D0%B2%D0%B0_%E2%80%9E%D0%9F%D1%80%D0%B5%D1%81%D0%B2%D0%B5%D1%82%D0%BE_%D0%A1%D1%80%D1%86%D0%B5_%D0%98%D1%81%D1%83%D1%81%D0%BE%D0%B2%D0%BE%E2%80%9C_-_%D0%A1%D0%BA%D0%BE%D0%BF%D1%98%D0%B5"
+        }
+      ],
+      "evidence": [
+        "Црквата била изградена во 1977 година, а нејзин архитект е Благоја Мицковски."
+      ]
+    },
+    {
+      "id": "VZ-QA-048",
+      "question": "What construction or foundation detail is stated for National Theatre of Bitola?",
+      "ground_truth": "Историја Битолскиот народен театар е основан на 14 ноември 1944 година, со изведбата на претставата „Ѓоре Магарески“.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "historical date/event fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q12287718",
+          "label_en": "National Theatre of Bitola",
+          "label_mk": "Народен театар",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9D%D0%B0%D1%80%D0%BE%D0%B4%D0%B5%D0%BD_%D1%82%D0%B5%D0%B0%D1%82%D0%B0%D1%80_%28%D0%91%D0%B8%D1%82%D0%BE%D0%BB%D0%B0%29"
+        }
+      ],
+      "evidence": [
+        "Историја Битолскиот народен театар е основан на 14 ноември 1944 година, со изведбата на претставата „Ѓоре Магарески“."
+      ]
+    },
+    {
+      "id": "VZ-QA-049",
+      "question": "What construction or foundation detail is stated for Ascention of Jesus Church, Pijanec?",
+      "ground_truth": "Изградена е веројатно во XIX век.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "historical date/event fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q122975323",
+          "label_en": "Ascention of Jesus Church, Pijanec",
+          "label_mk": "Пијанечка Црква",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A6%D1%80%D0%BA%D0%B2%D0%B0_%E2%80%9E%D0%A1%D0%B2._%D0%9F%D1%80%D0%B5%D0%BE%D0%B1%D1%80%D0%B0%D0%B6%D0%B5%D0%BD%D0%B8%D0%B5%E2%80%9C_-_%D0%9F%D0%B8%D1%98%D0%B0%D0%BD%D0%B5%D1%86"
+        }
+      ],
+      "evidence": [
+        "Изградена е веројатно во XIX век."
+      ]
+    },
+    {
+      "id": "VZ-QA-050",
+      "question": "What construction or foundation detail is stated for Church of St. Panteleimon?",
+      "ground_truth": "Манастирскиот комплекс е ограден со високи ѕидови, а во него се наоѓаат црквата изградена во македонски стил и манастирските конаци.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "historical date/event fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1261206",
+          "label_en": "Church of St. Panteleimon",
+          "label_mk": "Црква „Св. Пантелејмон“ - Горно Нерези",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A6%D1%80%D0%BA%D0%B2%D0%B0_%E2%80%9E%D0%A1%D0%B2._%D0%9F%D0%B0%D0%BD%D1%82%D0%B5%D0%BB%D0%B5%D1%98%D0%BC%D0%BE%D0%BD%E2%80%9C_-_%D0%93%D0%BE%D1%80%D0%BD%D0%BE_%D0%9D%D0%B5%D1%80%D0%B5%D0%B7%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Манастирскиот комплекс е ограден со високи ѕидови, а во него се наоѓаат црквата изградена во македонски стил и манастирските конаци."
+      ]
+    },
+    {
+      "id": "VZ-QA-051",
+      "question": "What construction or foundation detail is stated for Mustafa Paşa Mosque?",
+      "ground_truth": "Џамијата била изградена во 1492 година, како завештание на везирот Мустафа-паша, во чијашто чест и го добила своето име.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "historical date/event fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1267418",
+          "label_en": "Mustafa Paşa Mosque",
+          "label_mk": "Мустафа-пашина џамија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9C%D1%83%D1%81%D1%82%D0%B0%D1%84%D0%B0-%D0%BF%D0%B0%D1%88%D0%B8%D0%BD%D0%B0_%D1%9F%D0%B0%D0%BC%D0%B8%D1%98%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Џамијата била изградена во 1492 година, како завештание на везирот Мустафа-паша, во чијашто чест и го добила своето име."
+      ]
+    },
+    {
+      "id": "VZ-QA-052",
+      "question": "What publication or book detail is stated for Под Вавилон – задачата на преведувачот?",
+      "ground_truth": "Под Вавилон – задачата на преведувачот — книга стручна монографија од Драги Михајловски.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "bibliographic fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q111709943",
+          "label_en": null,
+          "label_mk": "Под Вавилон – задачата на преведувачот",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9F%D0%BE%D0%B4_%D0%92%D0%B0%D0%B2%D0%B8%D0%BB%D0%BE%D0%BD_%E2%80%93_%D0%B7%D0%B0%D0%B4%D0%B0%D1%87%D0%B0%D1%82%D0%B0_%D0%BD%D0%B0_%D0%BF%D1%80%D0%B5%D0%B2%D0%B5%D0%B4%D1%83%D0%B2%D0%B0%D1%87%D0%BE%D1%82"
+        }
+      ],
+      "evidence": [
+        "Под Вавилон – задачата на преведувачот — книга стручна монографија од Драги Михајловски."
+      ]
+    },
+    {
+      "id": "VZ-QA-053",
+      "question": "What publication or book detail is stated for Сиромавиот и чучурлигата?",
+      "ground_truth": "Сиромавиот и чучурлигата — книга за деца од Драги Михајловски.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "bibliographic fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q111710018",
+          "label_en": null,
+          "label_mk": "Сиромавиот и чучурлигата",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A1%D0%B8%D1%80%D0%BE%D0%BC%D0%B0%D0%B2%D0%B8%D0%BE%D1%82_%D0%B8_%D1%87%D1%83%D1%87%D1%83%D1%80%D0%BB%D0%B8%D0%B3%D0%B0%D1%82%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Сиромавиот и чучурлигата — книга за деца од Драги Михајловски."
+      ]
+    },
+    {
+      "id": "VZ-QA-054",
+      "question": "What publication or book detail is stated for Волшебното котле и други бајки?",
+      "ground_truth": "Книгата е издадена во 1995 година во Македонија.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "bibliographic fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q111710035",
+          "label_en": null,
+          "label_mk": "Волшебното котле и други бајки",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%92%D0%BE%D0%BB%D1%88%D0%B5%D0%B1%D0%BD%D0%BE%D1%82%D0%BE_%D0%BA%D0%BE%D1%82%D0%BB%D0%B5_%D0%B8_%D0%B4%D1%80%D1%83%D0%B3%D0%B8_%D0%B1%D0%B0%D1%98%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Книгата е издадена во 1995 година во Македонија."
+      ]
+    },
+    {
+      "id": "VZ-QA-055",
+      "question": "What publication or book detail is stated for Должници?",
+      "ground_truth": "Должници — роман од Драги Михајловски.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "bibliographic fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q111710076",
+          "label_en": null,
+          "label_mk": "Должници",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%94%D0%BE%D0%BB%D0%B6%D0%BD%D0%B8%D1%86%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Должници — роман од Драги Михајловски."
+      ]
+    },
+    {
+      "id": "VZ-QA-056",
+      "question": "What publication or book detail is stated for Раскази и споредбени коментари?",
+      "ground_truth": "Раскази и споредбени коментари — збирка раскази од Драги Михајловски.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "bibliographic fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q111710087",
+          "label_en": null,
+          "label_mk": "Раскази и споредбени коментари",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A0%D0%B0%D1%81%D0%BA%D0%B0%D0%B7%D0%B8_%D0%B8_%D1%81%D0%BF%D0%BE%D1%80%D0%B5%D0%B4%D0%B1%D0%B5%D0%BD%D0%B8_%D0%BA%D0%BE%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%80%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Раскази и споредбени коментари — збирка раскази од Драги Михајловски."
+      ]
+    },
+    {
+      "id": "VZ-QA-057",
+      "question": "What publication or book detail is stated for Страјк?",
+      "ground_truth": "Нивниот албум „Не заборавај“ беше издаден во јули 2007.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "bibliographic fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q113686260",
+          "label_en": null,
+          "label_mk": "Страјк",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A1%D1%82%D1%80%D0%B0%D1%98%D0%BA"
+        }
+      ],
+      "evidence": [
+        "Нивниот албум „Не заборавај“ беше издаден во јули 2007."
+      ]
+    },
+    {
+      "id": "VZ-QA-058",
+      "question": "What publication or book detail is stated for Xsoundbeatz?",
+      "ground_truth": "Следната објавена песна е „Балкан талава“.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "bibliographic fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q115193816",
+          "label_en": "Xsoundbeatz",
+          "label_mk": "Xsoundbeatz",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/Xsoundbeatz"
+        }
+      ],
+      "evidence": [
+        "Следната објавена песна е „Балкан талава“."
+      ]
+    },
+    {
+      "id": "VZ-QA-059",
+      "question": "What career, award, or achievement detail is stated for Ljubiša Georgievski?",
+      "ground_truth": "Љубиша Георгиевски (30 мај 1937, Битола - 6 декември 2018, Скопје) — македонски театарски и филмски режисер, драмски писател и есеист, теоретичар на театарот, политичар, и професор по театарска режија и глумечка игра на Факултетот за драмски уметности во Скопје.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "career or award fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1023595",
+          "label_en": "Ljubiša Georgievski",
+          "label_mk": "Љубиша Георгиевски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%89%D1%83%D0%B1%D0%B8%D1%88%D0%B0_%D0%93%D0%B5%D0%BE%D1%80%D0%B3%D0%B8%D0%B5%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Љубиша Георгиевски (30 мај 1937, Битола - 6 декември 2018, Скопје) — македонски театарски и филмски режисер, драмски писател и есеист, теоретичар на театарот, политичар, и професор по театарска режија и глумечка игра на Факултетот за драмски уметности во Скопје."
+      ]
+    },
+    {
+      "id": "VZ-QA-060",
+      "question": "What career, award, or achievement detail is stated for Jasin Ferati?",
+      "ground_truth": "He is the 2022 Porsche Sports Cup Suisse champion, having previously competed in the Formula Regional European Championship.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "career or award fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q106634862",
+          "label_en": "Jasin Ferati",
+          "label_mk": "Jasin Ferati",
+          "wikipedia_url": "https://en.wikipedia.org/wiki/Jasin_Ferati"
+        }
+      ],
+      "evidence": [
+        "He is the 2022 Porsche Sports Cup Suisse champion, having previously competed in the Formula Regional European Championship."
+      ]
+    },
+    {
+      "id": "VZ-QA-061",
+      "question": "What career, award, or achievement detail is stated for Puleksenija Jovanoska?",
+      "ground_truth": "Кариера Таа е европски бронзен медалист на Европското првенство во карате (Континентално првенство) и балкански златен медалист во категоријата поединечна Ката У-21, а освоила и медали на признатите турнири од Светската карате федерација.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "career or award fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q107442773",
+          "label_en": "Puleksenija Jovanoska",
+          "label_mk": "Пулексенија Јовановска",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9F%D1%83%D0%BB%D0%B5%D0%BA%D1%81%D0%B5%D0%BD%D0%B8%D1%98%D0%B0_%D0%88%D0%BE%D0%B2%D0%B0%D0%BD%D0%BE%D0%B2%D1%81%D0%BA%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Кариера Таа е европски бронзен медалист на Европското првенство во карате (Континентално првенство) и балкански златен медалист во категоријата поединечна Ката У-21, а освоила и медали на признатите турнири од Светската карате федерација."
+      ]
+    },
+    {
+      "id": "VZ-QA-062",
+      "question": "What career, award, or achievement detail is stated for Žarko Bašeski?",
+      "ground_truth": "Жарко Башески (11 август 1957 во Прилеп) ― македонски вајар и професор на Факултетот за ликовни уметности во Скопје.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "career or award fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1091325",
+          "label_en": "Žarko Bašeski",
+          "label_mk": "Жарко Башески",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%96%D0%B0%D1%80%D0%BA%D0%BE_%D0%91%D0%B0%D1%88%D0%B5%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Жарко Башески (11 август 1957 во Прилеп) ― македонски вајар и професор на Факултетот за ликовни уметности во Скопје."
+      ]
+    },
+    {
+      "id": "VZ-QA-063",
+      "question": "What career, award, or achievement detail is stated for Страјк?",
+      "ground_truth": "Кариера Страјк ја започна својата музичка кариера во 1997 година како еден од основачите на рап групата Легијата, и еден од првите артисти што соработуваа со продукциската куќа Шурикен Рекордс, каде се појавува на првото издание – „SK Street Beatz”.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "career or award fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q113686260",
+          "label_en": null,
+          "label_mk": "Страјк",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A1%D1%82%D1%80%D0%B0%D1%98%D0%BA"
+        }
+      ],
+      "evidence": [
+        "Кариера Страјк ја започна својата музичка кариера во 1997 година како еден од основачите на рап групата Легијата, и еден од првите артисти што соработуваа со продукциската куќа Шурикен Рекордс, каде се појавува на првото издание – „SK Street Beatz”."
+      ]
+    },
+    {
+      "id": "VZ-QA-064",
+      "question": "What career, award, or achievement detail is stated for Angel Gavrovski?",
+      "ground_truth": "Како професор предава вечерен акт, пластична анатомија, декоративно писмо, предмети од областа на уникатниот и украсниот текстил, и предмети на ликовното и применетото сликарство.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "career or award fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1150748",
+          "label_en": "Angel Gavrovski",
+          "label_mk": "Ангел Гавровски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%90%D0%BD%D0%B3%D0%B5%D0%BB_%D0%93%D0%B0%D0%B2%D1%80%D0%BE%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Како професор предава вечерен акт, пластична анатомија, декоративно писмо, предмети од областа на уникатниот и украсниот текстил, и предмети на ликовното и применетото сликарство."
+      ]
+    },
+    {
+      "id": "VZ-QA-065",
+      "question": "What career, award, or achievement detail is stated for Xsoundbeatz?",
+      "ground_truth": "Својата музичка кариера ја започнал во Македонија, каде во 2019 г. го издал својот прв сингл „Балкан хит“.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / targeted factual",
+      "answer_type": "career or award fact",
+      "recommended_lightrag_modes": [
+        "naive",
+        "local",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q115193816",
+          "label_en": "Xsoundbeatz",
+          "label_mk": "Xsoundbeatz",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/Xsoundbeatz"
+        }
+      ],
+      "evidence": [
+        "Својата музичка кариера ја започнал во Македонија, каде во 2019 г. го издал својот прв сингл „Балкан хит“."
+      ]
+    },
+    {
+      "id": "VZ-QA-066",
+      "question": "Summarize Ishak Bey Mosque using both its corpus description and one detailed supporting fact.",
+      "ground_truth": "Ishak Bey Mosque — mosque in Macedonia. Supporting detail: Исхак-беговата џамија, позната и како Шарена џамија (Алаџа-џамија) — џамија во Скопје којашто се наоѓа во непосредна близина на пазариштето Бит-пазар. Изградена е по наредба на вториот отомански управител на градот, Исхак-бег, во 1438 година.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / multi-chunk synthesis",
+      "answer_type": "two-part synthesized answer",
+      "recommended_lightrag_modes": [
+        "hybrid",
+        "mix",
+        "local"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1009860",
+          "label_en": "Ishak Bey Mosque",
+          "label_mk": "Исхак-бегова џамија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%98%D1%81%D1%85%D0%B0%D0%BA-%D0%B1%D0%B5%D0%B3%D0%BE%D0%B2%D0%B0_%D1%9F%D0%B0%D0%BC%D0%B8%D1%98%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Ishak Bey Mosque — mosque in Macedonia.",
+        "Исхак-беговата џамија, позната и како Шарена џамија (Алаџа-џамија) — џамија во Скопје којашто се наоѓа во непосредна близина на пазариштето Бит-пазар. Изградена е по наредба на вториот отомански управител на градот, Исхак-бег, во 1438 година."
+      ]
+    },
+    {
+      "id": "VZ-QA-067",
+      "question": "Summarize Šarena Mosque using both its corpus description and one detailed supporting fact.",
+      "ground_truth": "Šarena Mosque — mosque in Tetovo, North Macedonia. Supporting detail: Шарената џамија — позната живописна џамија во градот Тетово, Македонија.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / multi-chunk synthesis",
+      "answer_type": "two-part synthesized answer",
+      "recommended_lightrag_modes": [
+        "hybrid",
+        "mix",
+        "local"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1009896",
+          "label_en": "Šarena Mosque",
+          "label_mk": "Шарена џамија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A8%D0%B0%D1%80%D0%B5%D0%BD%D0%B0_%D1%9F%D0%B0%D0%BC%D0%B8%D1%98%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Šarena Mosque — mosque in Tetovo, North Macedonia.",
+        "Шарената џамија — позната живописна џамија во градот Тетово, Македонија."
+      ]
+    },
+    {
+      "id": "VZ-QA-068",
+      "question": "Summarize Ljubiša Georgievski using both its corpus description and one detailed supporting fact.",
+      "ground_truth": "Ljubiša Georgievski — Macedonian politician (1937-2018). Supporting detail: Љубиша Георгиевски (30 мај 1937, Битола - 6 декември 2018, Скопје) — македонски театарски и филмски режисер, драмски писател и есеист, теоретичар на театарот, политичар, и професор по театарска режија и глумечка игра на Факултетот за драмски уметности во Скопје.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / multi-chunk synthesis",
+      "answer_type": "two-part synthesized answer",
+      "recommended_lightrag_modes": [
+        "hybrid",
+        "mix",
+        "local"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1023595",
+          "label_en": "Ljubiša Georgievski",
+          "label_mk": "Љубиша Георгиевски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%89%D1%83%D0%B1%D0%B8%D1%88%D0%B0_%D0%93%D0%B5%D0%BE%D1%80%D0%B3%D0%B8%D0%B5%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Ljubiša Georgievski — Macedonian politician (1937-2018).",
+        "Љубиша Георгиевски (30 мај 1937, Битола - 6 декември 2018, Скопје) — македонски театарски и филмски режисер, драмски писател и есеист, теоретичар на театарот, политичар, и професор по театарска режија и глумечка игра на Факултетот за драмски уметности во Скопје."
+      ]
+    },
+    {
+      "id": "VZ-QA-069",
+      "question": "Summarize Jasin Ferati using both its corpus description and one detailed supporting fact.",
+      "ground_truth": "Jasin Ferati — Swiss racing driver. Supporting detail: He is the 2022 Porsche Sports Cup Suisse champion, having previously competed in the Formula Regional European Championship.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / multi-chunk synthesis",
+      "answer_type": "two-part synthesized answer",
+      "recommended_lightrag_modes": [
+        "hybrid",
+        "mix",
+        "local"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q106634862",
+          "label_en": "Jasin Ferati",
+          "label_mk": "Jasin Ferati",
+          "wikipedia_url": "https://en.wikipedia.org/wiki/Jasin_Ferati"
+        }
+      ],
+      "evidence": [
+        "Jasin Ferati — Swiss racing driver.",
+        "He is the 2022 Porsche Sports Cup Suisse champion, having previously competed in the Formula Regional European Championship."
+      ]
+    },
+    {
+      "id": "VZ-QA-070",
+      "question": "Summarize Puleksenija Jovanoska using both its corpus description and one detailed supporting fact.",
+      "ground_truth": "Puleksenija Jovanoska — North Macedonian karateka. Supporting detail: Кариера Таа е европски бронзен медалист на Европското првенство во карате (Континентално првенство) и балкански златен медалист во категоријата поединечна Ката У-21, а освоила и медали на признатите турнири од Светската карате федерација.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / multi-chunk synthesis",
+      "answer_type": "two-part synthesized answer",
+      "recommended_lightrag_modes": [
+        "hybrid",
+        "mix",
+        "local"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q107442773",
+          "label_en": "Puleksenija Jovanoska",
+          "label_mk": "Пулексенија Јовановска",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9F%D1%83%D0%BB%D0%B5%D0%BA%D1%81%D0%B5%D0%BD%D0%B8%D1%98%D0%B0_%D0%88%D0%BE%D0%B2%D0%B0%D0%BD%D0%BE%D0%B2%D1%81%D0%BA%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Puleksenija Jovanoska — North Macedonian karateka.",
+        "Кариера Таа е европски бронзен медалист на Европското првенство во карате (Континентално првенство) и балкански златен медалист во категоријата поединечна Ката У-21, а освоила и медали на признатите турнири од Светската карате федерација."
+      ]
+    },
+    {
+      "id": "VZ-QA-071",
+      "question": "Summarize Žarko Bašeski using both its corpus description and one detailed supporting fact.",
+      "ground_truth": "Žarko Bašeski — Macedonian artist. Supporting detail: Жарко Башески (11 август 1957 во Прилеп) ― македонски вајар и професор на Факултетот за ликовни уметности во Скопје.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / multi-chunk synthesis",
+      "answer_type": "two-part synthesized answer",
+      "recommended_lightrag_modes": [
+        "hybrid",
+        "mix",
+        "local"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1091325",
+          "label_en": "Žarko Bašeski",
+          "label_mk": "Жарко Башески",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%96%D0%B0%D1%80%D0%BA%D0%BE_%D0%91%D0%B0%D1%88%D0%B5%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Žarko Bašeski — Macedonian artist.",
+        "Жарко Башески (11 август 1957 во Прилеп) ― македонски вајар и професор на Факултетот за ликовни уметности во Скопје."
+      ]
+    },
+    {
+      "id": "VZ-QA-072",
+      "question": "Summarize Cinematheque of Macedonia using both its corpus description and one detailed supporting fact.",
+      "ground_truth": "Cinematheque of Macedonia is a cultural entity from North Macedonia. Supporting detail: Cinematheque of Macedonia is located in Скопје.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / multi-chunk synthesis",
+      "answer_type": "two-part synthesized answer",
+      "recommended_lightrag_modes": [
+        "hybrid",
+        "mix",
+        "local"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q110132018",
+          "label_en": "Cinematheque of Macedonia",
+          "label_mk": "Кинотека на Македонија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9A%D0%B8%D0%BD%D0%BE%D1%82%D0%B5%D0%BA%D0%B0_%D0%BD%D0%B0_%D0%9C%D0%B0%D0%BA%D0%B5%D0%B4%D0%BE%D0%BD%D0%B8%D1%98%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Cinematheque of Macedonia is a cultural entity from North Macedonia.",
+        "Cinematheque of Macedonia is located in Скопје."
+      ]
+    },
+    {
+      "id": "VZ-QA-073",
+      "question": "Summarize Stiv Naumov Memorial House using both its corpus description and one detailed supporting fact.",
+      "ground_truth": "Stiv Naumov Memorial House is a cultural entity from North Macedonia. Supporting detail: Меморијалниот музеј „Стив Наумов“ — меморијален музеј и спомен-куќа во градот Битола, посветена на македонскиот револуционер Стефан Наумов-Стив.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / multi-chunk synthesis",
+      "answer_type": "two-part synthesized answer",
+      "recommended_lightrag_modes": [
+        "hybrid",
+        "mix",
+        "local"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q110132368",
+          "label_en": "Stiv Naumov Memorial House",
+          "label_mk": "Меморијален музеј „Стив Наумов“",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9C%D0%B5%D0%BC%D0%BE%D1%80%D0%B8%D1%98%D0%B0%D0%BB%D0%B5%D0%BD_%D0%BC%D1%83%D0%B7%D0%B5%D1%98_%E2%80%9E%D0%A1%D1%82%D0%B8%D0%B2_%D0%9D%D0%B0%D1%83%D0%BC%D0%BE%D0%B2%E2%80%9C"
+        }
+      ],
+      "evidence": [
+        "Stiv Naumov Memorial House is a cultural entity from North Macedonia.",
+        "Меморијалниот музеј „Стив Наумов“ — меморијален музеј и спомен-куќа во градот Битола, посветена на македонскиот револуционер Стефан Наумов-Стив."
+      ]
+    },
+    {
+      "id": "VZ-QA-074",
+      "question": "Summarize Волшебното котле и други бајки using both its corpus description and one detailed supporting fact.",
+      "ground_truth": "Волшебното котле и други бајки — Дела на Драги Михајловски. Supporting detail: Книгата е издадена во 1995 година во Македонија.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / multi-chunk synthesis",
+      "answer_type": "two-part synthesized answer",
+      "recommended_lightrag_modes": [
+        "hybrid",
+        "mix",
+        "local"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q111710035",
+          "label_en": null,
+          "label_mk": "Волшебното котле и други бајки",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%92%D0%BE%D0%BB%D1%88%D0%B5%D0%B1%D0%BD%D0%BE%D1%82%D0%BE_%D0%BA%D0%BE%D1%82%D0%BB%D0%B5_%D0%B8_%D0%B4%D1%80%D1%83%D0%B3%D0%B8_%D0%B1%D0%B0%D1%98%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Волшебното котле и други бајки — Дела на Драги Михајловски.",
+        "Книгата е издадена во 1995 година во Македонија."
+      ]
+    },
+    {
+      "id": "VZ-QA-075",
+      "question": "Summarize Страјк using both its corpus description and one detailed supporting fact.",
+      "ground_truth": "Страјк — North Macedonian disc jockey, graffiti artist, and rapper. Supporting detail: Кариера Страјк ја започна својата музичка кариера во 1997 година како еден од основачите на рап групата Легијата, и еден од првите артисти што соработуваа со продукциската куќа Шурикен Рекордс, каде се појавува на првото издание – „SK Street Beatz”.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / multi-chunk synthesis",
+      "answer_type": "two-part synthesized answer",
+      "recommended_lightrag_modes": [
+        "hybrid",
+        "mix",
+        "local"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q113686260",
+          "label_en": null,
+          "label_mk": "Страјк",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A1%D1%82%D1%80%D0%B0%D1%98%D0%BA"
+        }
+      ],
+      "evidence": [
+        "Страјк — North Macedonian disc jockey, graffiti artist, and rapper.",
+        "Кариера Страјк ја започна својата музичка кариера во 1997 година како еден од основачите на рап групата Легијата, и еден од првите артисти што соработуваа со продукциската куќа Шурикен Рекордс, каде се појавува на првото издание – „SK Street Beatz”."
+      ]
+    },
+    {
+      "id": "VZ-QA-076",
+      "question": "Summarize Синагога Арагон (Битола) using both its corpus description and one detailed supporting fact.",
+      "ground_truth": "Синагога Арагон (Битола) — поранешна синагога во Битола. Supporting detail: Синагога Арагон (Битола) is located in Општина Битола.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / multi-chunk synthesis",
+      "answer_type": "two-part synthesized answer",
+      "recommended_lightrag_modes": [
+        "hybrid",
+        "mix",
+        "local"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q114245520",
+          "label_en": null,
+          "label_mk": "Синагога Арагон (Битола)",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A1%D0%B8%D0%BD%D0%B0%D0%B3%D0%BE%D0%B3%D0%B0_%D0%90%D1%80%D0%B0%D0%B3%D0%BE%D0%BD_%28%D0%91%D0%B8%D1%82%D0%BE%D0%BB%D0%B0%29"
+        }
+      ],
+      "evidence": [
+        "Синагога Арагон (Битола) — поранешна синагога во Битола.",
+        "Синагога Арагон (Битола) is located in Општина Битола."
+      ]
+    },
+    {
+      "id": "VZ-QA-077",
+      "question": "Summarize Angel Gavrovski using both its corpus description and one detailed supporting fact.",
+      "ground_truth": "Angel Gavrovski — Macedonian artist. Supporting detail: Како професор предава вечерен акт, пластична анатомија, декоративно писмо, предмети од областа на уникатниот и украсниот текстил, и предмети на ликовното и применетото сликарство.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / multi-chunk synthesis",
+      "answer_type": "two-part synthesized answer",
+      "recommended_lightrag_modes": [
+        "hybrid",
+        "mix",
+        "local"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1150748",
+          "label_en": "Angel Gavrovski",
+          "label_mk": "Ангел Гавровски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%90%D0%BD%D0%B3%D0%B5%D0%BB_%D0%93%D0%B0%D0%B2%D1%80%D0%BE%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Angel Gavrovski — Macedonian artist.",
+        "Како професор предава вечерен акт, пластична анатомија, декоративно писмо, предмети од областа на уникатниот и украсниот текстил, и предмети на ликовното и применетото сликарство."
+      ]
+    },
+    {
+      "id": "VZ-QA-078",
+      "question": "Summarize Xsoundbeatz using both its corpus description and one detailed supporting fact.",
+      "ground_truth": "Xsoundbeatz — Macedonian-Albanian producer. Supporting detail: Неговото студио се наоѓа во скопското село Трубарево, од каде потекнува.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / multi-chunk synthesis",
+      "answer_type": "two-part synthesized answer",
+      "recommended_lightrag_modes": [
+        "hybrid",
+        "mix",
+        "local"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q115193816",
+          "label_en": "Xsoundbeatz",
+          "label_mk": "Xsoundbeatz",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/Xsoundbeatz"
+        }
+      ],
+      "evidence": [
+        "Xsoundbeatz — Macedonian-Albanian producer.",
+        "Неговото студио се наоѓа во скопското село Трубарево, од каде потекнува."
+      ]
+    },
+    {
+      "id": "VZ-QA-079",
+      "question": "Summarize Gjorgji Filipovski using both its corpus description and one detailed supporting fact.",
+      "ground_truth": "Gjorgji Filipovski — Yugoslav/Macedonian pedologist. Supporting detail: Ѓорѓи Филиповски (Суровичево, Леринско, 6 мај 1919 — Скопје, 21 декември 2019) — македонски професор и научник од областа на педологијата - науката за почвите, агрохемијата и земјоделството.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / multi-chunk synthesis",
+      "answer_type": "two-part synthesized answer",
+      "recommended_lightrag_modes": [
+        "hybrid",
+        "mix",
+        "local"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q11527866",
+          "label_en": "Gjorgji Filipovski",
+          "label_mk": "Ѓорѓи Филиповски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%83%D0%BE%D1%80%D1%93%D0%B8_%D0%A4%D0%B8%D0%BB%D0%B8%D0%BF%D0%BE%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Gjorgji Filipovski — Yugoslav/Macedonian pedologist.",
+        "Ѓорѓи Филиповски (Суровичево, Леринско, 6 мај 1919 — Скопје, 21 декември 2019) — македонски професор и научник од областа на педологијата - науката за почвите, агрохемијата и земјоделството."
+      ]
+    },
+    {
+      "id": "VZ-QA-080",
+      "question": "Summarize Cathedral of the Sacred Heart of Jesus using both its corpus description and one detailed supporting fact.",
+      "ground_truth": "Cathedral of the Sacred Heart of Jesus — Roman Catholic cathedral in Skopje, North Macedonia. Supporting detail: Црквата „Пресвето Срце Исусово“ е католички храм кој се наоѓа во Скопје, Македонија.",
+      "project": "vezilka_lightrag",
+      "query_type": "single-hop / multi-chunk synthesis",
+      "answer_type": "two-part synthesized answer",
+      "recommended_lightrag_modes": [
+        "hybrid",
+        "mix",
+        "local"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q11737299",
+          "label_en": "Cathedral of the Sacred Heart of Jesus",
+          "label_mk": "Црква „Пресвето Срце Исусово“ - Скопје",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A6%D1%80%D0%BA%D0%B2%D0%B0_%E2%80%9E%D0%9F%D1%80%D0%B5%D1%81%D0%B2%D0%B5%D1%82%D0%BE_%D0%A1%D1%80%D1%86%D0%B5_%D0%98%D1%81%D1%83%D1%81%D0%BE%D0%B2%D0%BE%E2%80%9C_-_%D0%A1%D0%BA%D0%BE%D0%BF%D1%98%D0%B5"
+        }
+      ],
+      "evidence": [
+        "Cathedral of the Sacred Heart of Jesus — Roman Catholic cathedral in Skopje, North Macedonia.",
+        "Црквата „Пресвето Срце Исусово“ е католички храм кој се наоѓа во Скопје, Македонија."
+      ]
+    },
+    {
+      "id": "VZ-QA-081",
+      "question": "Compare Ljubiša Georgievski and Jasin Ferati as entities of type човек. What is each one?",
+      "ground_truth": "Ljubiša Georgievski: Ljubiša Georgievski — Macedonian politician (1937-2018). Jasin Ferati: Jasin Ferati — Swiss racing driver.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / cross-document comparison",
+      "answer_type": "comparative two-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1023595",
+          "label_en": "Ljubiša Georgievski",
+          "label_mk": "Љубиша Георгиевски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%89%D1%83%D0%B1%D0%B8%D1%88%D0%B0_%D0%93%D0%B5%D0%BE%D1%80%D0%B3%D0%B8%D0%B5%D0%B2%D1%81%D0%BA%D0%B8"
+        },
+        {
+          "qid": "Q106634862",
+          "label_en": "Jasin Ferati",
+          "label_mk": "Jasin Ferati",
+          "wikipedia_url": "https://en.wikipedia.org/wiki/Jasin_Ferati"
+        }
+      ],
+      "evidence": [
+        "Ljubiša Georgievski — Macedonian politician (1937-2018).",
+        "Jasin Ferati — Swiss racing driver."
+      ]
+    },
+    {
+      "id": "VZ-QA-082",
+      "question": "Compare Puleksenija Jovanoska and Žarko Bašeski as entities of type човек. What is each one?",
+      "ground_truth": "Puleksenija Jovanoska: Puleksenija Jovanoska — North Macedonian karateka. Žarko Bašeski: Žarko Bašeski — Macedonian artist.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / cross-document comparison",
+      "answer_type": "comparative two-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q107442773",
+          "label_en": "Puleksenija Jovanoska",
+          "label_mk": "Пулексенија Јовановска",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9F%D1%83%D0%BB%D0%B5%D0%BA%D1%81%D0%B5%D0%BD%D0%B8%D1%98%D0%B0_%D0%88%D0%BE%D0%B2%D0%B0%D0%BD%D0%BE%D0%B2%D1%81%D0%BA%D0%B0"
+        },
+        {
+          "qid": "Q1091325",
+          "label_en": "Žarko Bašeski",
+          "label_mk": "Жарко Башески",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%96%D0%B0%D1%80%D0%BA%D0%BE_%D0%91%D0%B0%D1%88%D0%B5%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Puleksenija Jovanoska — North Macedonian karateka.",
+        "Žarko Bašeski — Macedonian artist."
+      ]
+    },
+    {
+      "id": "VZ-QA-083",
+      "question": "Compare Страјк and Angel Gavrovski as entities of type човек. What is each one?",
+      "ground_truth": "Страјк: Страјк — North Macedonian disc jockey, graffiti artist, and rapper. Angel Gavrovski: Angel Gavrovski — Macedonian artist.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / cross-document comparison",
+      "answer_type": "comparative two-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q113686260",
+          "label_en": null,
+          "label_mk": "Страјк",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A1%D1%82%D1%80%D0%B0%D1%98%D0%BA"
+        },
+        {
+          "qid": "Q1150748",
+          "label_en": "Angel Gavrovski",
+          "label_mk": "Ангел Гавровски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%90%D0%BD%D0%B3%D0%B5%D0%BB_%D0%93%D0%B0%D0%B2%D1%80%D0%BE%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Страјк — North Macedonian disc jockey, graffiti artist, and rapper.",
+        "Angel Gavrovski — Macedonian artist."
+      ]
+    },
+    {
+      "id": "VZ-QA-084",
+      "question": "Compare Xsoundbeatz and Gjorgji Filipovski as entities of type човек. What is each one?",
+      "ground_truth": "Xsoundbeatz: Xsoundbeatz — Macedonian-Albanian producer. Gjorgji Filipovski: Gjorgji Filipovski — Yugoslav/Macedonian pedologist.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / cross-document comparison",
+      "answer_type": "comparative two-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q115193816",
+          "label_en": "Xsoundbeatz",
+          "label_mk": "Xsoundbeatz",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/Xsoundbeatz"
+        },
+        {
+          "qid": "Q11527866",
+          "label_en": "Gjorgji Filipovski",
+          "label_mk": "Ѓорѓи Филиповски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%83%D0%BE%D1%80%D1%93%D0%B8_%D0%A4%D0%B8%D0%BB%D0%B8%D0%BF%D0%BE%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Xsoundbeatz — Macedonian-Albanian producer.",
+        "Gjorgji Filipovski — Yugoslav/Macedonian pedologist."
+      ]
+    },
+    {
+      "id": "VZ-QA-085",
+      "question": "Compare Anastasija Baltova and Boris Čipan as entities of type човек. What is each one?",
+      "ground_truth": "Anastasija Baltova: Anastasija Baltova — Macedonian revolutionary. Boris Čipan: Boris Čipan — Macedonian architect.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / cross-document comparison",
+      "answer_type": "comparative two-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q12271806",
+          "label_en": "Anastasija Baltova",
+          "label_mk": "Анастасија Балтова",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%90%D0%BD%D0%B0%D1%81%D1%82%D0%B0%D1%81%D0%B8%D1%98%D0%B0_%D0%91%D0%B0%D0%BB%D1%82%D0%BE%D0%B2%D0%B0"
+        },
+        {
+          "qid": "Q12273756",
+          "label_en": "Boris Čipan",
+          "label_mk": "Борис Чипан",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%91%D0%BE%D1%80%D0%B8%D1%81_%D0%A7%D0%B8%D0%BF%D0%B0%D0%BD"
+        }
+      ],
+      "evidence": [
+        "Anastasija Baltova — Macedonian revolutionary.",
+        "Boris Čipan — Macedonian architect."
+      ]
+    },
+    {
+      "id": "VZ-QA-086",
+      "question": "Compare Јорго Шундовски and Marko Sekulichki as entities of type човек. What is each one?",
+      "ground_truth": "Јорго Шундовски: Јорго Шундовски — Macedonian politician and architect. Marko Sekulichki: Marko Sekulichki — Bulgarian revolutionary.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / cross-document comparison",
+      "answer_type": "comparative two-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q12282111",
+          "label_en": null,
+          "label_mk": "Јорго Шундовски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%88%D0%BE%D1%80%D0%B3%D0%BE_%D0%A8%D1%83%D0%BD%D0%B4%D0%BE%D0%B2%D1%81%D0%BA%D0%B8"
+        },
+        {
+          "qid": "Q12286202",
+          "label_en": "Marko Sekulichki",
+          "label_mk": "Марко Секулички",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9C%D0%B0%D1%80%D0%BA%D0%BE_%D0%A1%D0%B5%D0%BA%D1%83%D0%BB%D0%B8%D1%87%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Јорго Шундовски — Macedonian politician and architect.",
+        "Marko Sekulichki — Bulgarian revolutionary."
+      ]
+    },
+    {
+      "id": "VZ-QA-087",
+      "question": "Compare Никола Митрев-Езерски and Risto Ǵ. Jačev as entities of type човек. What is each one?",
+      "ground_truth": "Никола Митрев-Езерски: Никола Митрев-Езерски is a cultural entity from North Macedonia. Risto Ǵ. Jačev: Jačev — Macedonian poet.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / cross-document comparison",
+      "answer_type": "comparative two-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q12288479",
+          "label_en": null,
+          "label_mk": "Никола Митрев-Езерски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0_%D0%9C%D0%B8%D1%82%D1%80%D0%B5%D0%B2-%D0%95%D0%B7%D0%B5%D1%80%D1%81%D0%BA%D0%B8"
+        },
+        {
+          "qid": "Q12292421",
+          "label_en": "Risto Ǵ. Jačev",
+          "label_mk": "Ристо Јачев",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A0%D0%B8%D1%81%D1%82%D0%BE_%D0%88%D0%B0%D1%87%D0%B5%D0%B2"
+        }
+      ],
+      "evidence": [
+        "Никола Митрев-Езерски is a cultural entity from North Macedonia.",
+        "Jačev — Macedonian poet."
+      ]
+    },
+    {
+      "id": "VZ-QA-088",
+      "question": "Compare Tsvetanka Senokozlieva and Тони Шулевски as entities of type човек. What is each one?",
+      "ground_truth": "Tsvetanka Senokozlieva: Tsvetanka Senokozlieva — North Macedonia revolutionary (1875–1906) ♀. Тони Шулевски: Тони Шулевски — македонски балетан.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / cross-document comparison",
+      "answer_type": "comparative two-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q12298792",
+          "label_en": "Tsvetanka Senokozlieva",
+          "label_mk": "Цветанка Сенокозлиева",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A6%D0%B2%D0%B5%D1%82%D0%B0%D0%BD%D0%BA%D0%B0_%D0%A1%D0%B5%D0%BD%D0%BE%D0%BA%D0%BE%D0%B7%D0%BB%D0%B8%D0%B5%D0%B2%D0%B0"
+        },
+        {
+          "qid": "Q123110108",
+          "label_en": null,
+          "label_mk": "Тони Шулевски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A2%D0%BE%D0%BD%D0%B8_%D0%A8%D1%83%D0%BB%D0%B5%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Tsvetanka Senokozlieva — North Macedonia revolutionary (1875–1906) ♀.",
+        "Тони Шулевски — македонски балетан."
+      ]
+    },
+    {
+      "id": "VZ-QA-089",
+      "question": "Compare Jordan Plevnes and Liljana Dirjan as entities of type човек. What is each one?",
+      "ground_truth": "Jordan Plevnes: Jordan Plevnes — Macedonian writer and diplomat. Liljana Dirjan: Liljana Dirjan — Macedonian journalist.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / cross-document comparison",
+      "answer_type": "comparative two-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q126476",
+          "label_en": "Jordan Plevnes",
+          "label_mk": "Јордан Плевнеш",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%88%D0%BE%D1%80%D0%B4%D0%B0%D0%BD_%D0%9F%D0%BB%D0%B5%D0%B2%D0%BD%D0%B5%D1%88"
+        },
+        {
+          "qid": "Q126478",
+          "label_en": "Liljana Dirjan",
+          "label_mk": "Лилјана Дирјан",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9B%D0%B8%D0%BB%D1%98%D0%B0%D0%BD%D0%B0_%D0%94%D0%B8%D1%80%D1%98%D0%B0%D0%BD"
+        }
+      ],
+      "evidence": [
+        "Jordan Plevnes — Macedonian writer and diplomat.",
+        "Liljana Dirjan — Macedonian journalist."
+      ]
+    },
+    {
+      "id": "VZ-QA-090",
+      "question": "Compare Tomislav Osmanli and Dragan Janevski as entities of type човек. What is each one?",
+      "ground_truth": "Tomislav Osmanli: Tomislav Osmanli — Macedonian prose writer, playwright, screenplay writer, journalist. Dragan Janevski: Dragan Janevski — Macedonian translator.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / cross-document comparison",
+      "answer_type": "comparative two-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q126481",
+          "label_en": "Tomislav Osmanli",
+          "label_mk": "Томислав Османли",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A2%D0%BE%D0%BC%D0%B8%D1%81%D0%BB%D0%B0%D0%B2_%D0%9E%D1%81%D0%BC%D0%B0%D0%BD%D0%BB%D0%B8"
+        },
+        {
+          "qid": "Q126490",
+          "label_en": "Dragan Janevski",
+          "label_mk": "Драган Јаневски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%94%D1%80%D0%B0%D0%B3%D0%B0%D0%BD_%D0%88%D0%B0%D0%BD%D0%B5%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Tomislav Osmanli — Macedonian prose writer, playwright, screenplay writer, journalist.",
+        "Dragan Janevski — Macedonian translator."
+      ]
+    },
+    {
+      "id": "VZ-QA-091",
+      "question": "Compare Macedonia Yanchevska and Ljubomir Filipovski as entities of type човек. What is each one?",
+      "ground_truth": "Macedonia Yanchevska: Macedonia Yanchevska — Macedonian poet and children's writer. Ljubomir Filipovski: Ljubomir Filipovski — Macedonian comics artist.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / cross-document comparison",
+      "answer_type": "comparative two-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q126510",
+          "label_en": "Macedonia Yanchevska",
+          "label_mk": "Македонка Јанчевска",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9C%D0%B0%D0%BA%D0%B5%D0%B4%D0%BE%D0%BD%D0%BA%D0%B0_%D0%88%D0%B0%D0%BD%D1%87%D0%B5%D0%B2%D1%81%D0%BA%D0%B0"
+        },
+        {
+          "qid": "Q12904595",
+          "label_en": "Ljubomir Filipovski",
+          "label_mk": "Љубомир Филиповски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%89%D1%83%D0%B1%D0%BE%D0%BC%D0%B8%D1%80_%D0%A4%D0%B8%D0%BB%D0%B8%D0%BF%D0%BE%D0%B2%D1%81%D0%BA%D0%B8"
+        }
+      ],
+      "evidence": [
+        "Macedonia Yanchevska — Macedonian poet and children's writer.",
+        "Ljubomir Filipovski — Macedonian comics artist."
+      ]
+    },
+    {
+      "id": "VZ-QA-092",
+      "question": "Compare Darko Marković and Žamila Kolonomos as entities of type човек. What is each one?",
+      "ground_truth": "Darko Marković: Darko Marković — painter (1940-2016). Žamila Kolonomos: Žamila Kolonomos — Sephardi Jewish partisan, writer and academic (1922-2013).",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / cross-document comparison",
+      "answer_type": "comparative two-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q12905994",
+          "label_en": "Darko Marković",
+          "label_mk": "Дарко Марковиќ",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%94%D0%B0%D1%80%D0%BA%D0%BE_%D0%9C%D0%B0%D1%80%D0%BA%D0%BE%D0%B2%D0%B8%D1%9C"
+        },
+        {
+          "qid": "Q12906471",
+          "label_en": "Žamila Kolonomos",
+          "label_mk": "Жамила Колономос",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%96%D0%B0%D0%BC%D0%B8%D0%BB%D0%B0_%D0%9A%D0%BE%D0%BB%D0%BE%D0%BD%D0%BE%D0%BC%D0%BE%D1%81"
+        }
+      ],
+      "evidence": [
+        "Darko Marković — painter (1940-2016).",
+        "Žamila Kolonomos — Sephardi Jewish partisan, writer and academic (1922-2013)."
+      ]
+    },
+    {
+      "id": "VZ-QA-093",
+      "question": "Name three Vezilka corpus entities with instance type човек and state the core fact for each.",
+      "ground_truth": "Ljubiša Georgievski is represented as Ljubiša Georgievski — Macedonian politician (1937-2018).; Jasin Ferati is represented as Jasin Ferati — Swiss racing driver.; Puleksenija Jovanoska is represented as Puleksenija Jovanoska — North Macedonian karateka.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / set retrieval",
+      "answer_type": "enumerated multi-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1023595",
+          "label_en": "Ljubiša Georgievski",
+          "label_mk": "Љубиша Георгиевски",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%89%D1%83%D0%B1%D0%B8%D1%88%D0%B0_%D0%93%D0%B5%D0%BE%D1%80%D0%B3%D0%B8%D0%B5%D0%B2%D1%81%D0%BA%D0%B8"
+        },
+        {
+          "qid": "Q106634862",
+          "label_en": "Jasin Ferati",
+          "label_mk": "Jasin Ferati",
+          "wikipedia_url": "https://en.wikipedia.org/wiki/Jasin_Ferati"
+        },
+        {
+          "qid": "Q107442773",
+          "label_en": "Puleksenija Jovanoska",
+          "label_mk": "Пулексенија Јовановска",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9F%D1%83%D0%BB%D0%B5%D0%BA%D1%81%D0%B5%D0%BD%D0%B8%D1%98%D0%B0_%D0%88%D0%BE%D0%B2%D0%B0%D0%BD%D0%BE%D0%B2%D1%81%D0%BA%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Ljubiša Georgievski — Macedonian politician (1937-2018).",
+        "Jasin Ferati — Swiss racing driver.",
+        "Puleksenija Jovanoska — North Macedonian karateka."
+      ]
+    },
+    {
+      "id": "VZ-QA-094",
+      "question": "Name three Vezilka corpus entities with instance type open-access journal and state the core fact for each.",
+      "ground_truth": "Journal of Special Education and Rehabilitation is represented as Journal of Special Education and Rehabilitation — journal.; Macedonian veterinary review is represented as Macedonian veterinary review — journal.; Open access Macedonian journal of medical sciences is represented as Open access Macedonian journal of medical sciences — journal.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / set retrieval",
+      "answer_type": "enumerated multi-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q17111911",
+          "label_en": "Journal of Special Education and Rehabilitation",
+          "label_mk": "Journal of Special Education and Rehabilitation",
+          "wikipedia_url": "https://en.wikipedia.org/wiki/Journal_of_Special_Education_and_Rehabilitation"
+        },
+        {
+          "qid": "Q27727044",
+          "label_en": "Macedonian veterinary review",
+          "label_mk": "Macedonian veterinary review",
+          "wikipedia_url": null
+        },
+        {
+          "qid": "Q27727288",
+          "label_en": "Open access Macedonian journal of medical sciences",
+          "label_mk": "Open access Macedonian journal of medical sciences",
+          "wikipedia_url": null
+        }
+      ],
+      "evidence": [
+        "Journal of Special Education and Rehabilitation — journal.",
+        "Macedonian veterinary review — journal.",
+        "Open access Macedonian journal of medical sciences — journal."
+      ]
+    },
+    {
+      "id": "VZ-QA-095",
+      "question": "Name three Vezilka corpus entities with instance type архив and state the core fact for each.",
+      "ground_truth": "City archive of Skopje is represented as City archive of Skopje — Archive in Skopje.; Historical archive of Bitola is represented as Historical archive of Bitola — historical archive in Bitola.; Historic Archive (Štip) is represented as Historic Archive (Štip) — department of the State Archive of the Republic of Macedonia.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / set retrieval",
+      "answer_type": "enumerated multi-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q21102675",
+          "label_en": "City archive of Skopje",
+          "label_mk": "Архив на град Скопје",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%98%D1%81%D1%82%D0%BE%D1%80%D0%B8%D1%81%D0%BA%D0%B8_%D0%B0%D1%80%D1%85%D0%B8%D0%B2_%28%D0%A1%D0%BA%D0%BE%D0%BF%D1%98%D0%B5%29"
+        },
+        {
+          "qid": "Q22083859",
+          "label_en": "Historical archive of Bitola",
+          "label_mk": "Историски архив - Битола",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%98%D1%81%D1%82%D0%BE%D1%80%D0%B8%D1%81%D0%BA%D0%B8_%D0%B0%D1%80%D1%85%D0%B8%D0%B2_%28%D0%91%D0%B8%D1%82%D0%BE%D0%BB%D0%B0%29"
+        },
+        {
+          "qid": "Q23808380",
+          "label_en": "Historic Archive (Štip)",
+          "label_mk": "Историски архив (Штип)",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%98%D1%81%D1%82%D0%BE%D1%80%D0%B8%D1%81%D0%BA%D0%B8_%D0%B0%D1%80%D1%85%D0%B8%D0%B2_%28%D0%A8%D1%82%D0%B8%D0%BF%29"
+        }
+      ],
+      "evidence": [
+        "City archive of Skopje — Archive in Skopje.",
+        "Historical archive of Bitola — historical archive in Bitola.",
+        "Historic Archive (Štip) — department of the State Archive of the Republic of Macedonia."
+      ]
+    },
+    {
+      "id": "VZ-QA-096",
+      "question": "Name three Vezilka corpus entities with instance type ликовен музеј and state the core fact for each.",
+      "ground_truth": "Čifte Hammam is represented as Čifte Hammam — a place of bath in the North Macedonia.; Daout Pacha Hammam is represented as Daout Pacha Hammam — поранешен амам и сегашна уметничка галерија во Скопје, Македонија.; Icon Gallery (Tetovo) is represented as Icon Gallery (Tetovo) — art gallery in Tetovo.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / set retrieval",
+      "answer_type": "enumerated multi-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1271865",
+          "label_en": "Čifte Hammam",
+          "label_mk": "Чифте амам",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A7%D0%B8%D1%84%D1%82%D0%B5_%D0%B0%D0%BC%D0%B0%D0%BC"
+        },
+        {
+          "qid": "Q1283985",
+          "label_en": "Daout Pacha Hammam",
+          "label_mk": "Даут-пашин амам",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%94%D0%B0%D1%83%D1%82-%D0%BF%D0%B0%D1%88%D0%B8%D0%BD_%D0%B0%D0%BC%D0%B0%D0%BC"
+        },
+        {
+          "qid": "Q12905682",
+          "label_en": "Icon Gallery (Tetovo)",
+          "label_mk": "Галерија на икони (Тетово)",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%93%D0%B0%D0%BB%D0%B5%D1%80%D0%B8%D1%98%D0%B0_%D0%BD%D0%B0_%D0%B8%D0%BA%D0%BE%D0%BD%D0%B8_%28%D0%A2%D0%B5%D1%82%D0%BE%D0%B2%D0%BE%29"
+        }
+      ],
+      "evidence": [
+        "Čifte Hammam — a place of bath in the North Macedonia.",
+        "Daout Pacha Hammam — поранешен амам и сегашна уметничка галерија во Скопје, Македонија.",
+        "Icon Gallery (Tetovo) — art gallery in Tetovo."
+      ]
+    },
+    {
+      "id": "VZ-QA-097",
+      "question": "Name three Vezilka corpus entities with instance type манастир and state the core fact for each.",
+      "ground_truth": "Church of St. Panteleimon is represented as Panteleimon — church in Gorno Nerezi, Republic of Macedonia.; Saint Jovan Bigorski Monastery is represented as Saint Jovan Bigorski Monastery — monastery in North Macedonia.; Monastery of Saint Naum is represented as Monastery of Saint Naum — monastery.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / set retrieval",
+      "answer_type": "enumerated multi-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q1261206",
+          "label_en": "Church of St. Panteleimon",
+          "label_mk": "Црква „Св. Пантелејмон“ - Горно Нерези",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A6%D1%80%D0%BA%D0%B2%D0%B0_%E2%80%9E%D0%A1%D0%B2._%D0%9F%D0%B0%D0%BD%D1%82%D0%B5%D0%BB%D0%B5%D1%98%D0%BC%D0%BE%D0%BD%E2%80%9C_-_%D0%93%D0%BE%D1%80%D0%BD%D0%BE_%D0%9D%D0%B5%D1%80%D0%B5%D0%B7%D0%B8"
+        },
+        {
+          "qid": "Q1276520",
+          "label_en": "Saint Jovan Bigorski Monastery",
+          "label_mk": "Бигорски манастир",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%91%D0%B8%D0%B3%D0%BE%D1%80%D1%81%D0%BA%D0%B8_%D0%BC%D0%B0%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80"
+        },
+        {
+          "qid": "Q164216",
+          "label_en": "Monastery of Saint Naum",
+          "label_mk": "Манастир „Св. Наум“ - Охрид",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A1%D0%B2%D0%B5%D1%82%D0%B8_%D0%9D%D0%B0%D1%83%D0%BC_%28%D0%BC%D0%B0%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%29"
+        }
+      ],
+      "evidence": [
+        "Panteleimon — church in Gorno Nerezi, Republic of Macedonia.",
+        "Saint Jovan Bigorski Monastery — monastery in North Macedonia.",
+        "Monastery of Saint Naum — monastery."
+      ]
+    },
+    {
+      "id": "VZ-QA-098",
+      "question": "Name three Vezilka corpus entities with instance type музеј and state the core fact for each.",
+      "ground_truth": "Museum of Skopje Old Bazaar is represented as Museum of Skopje Old Bazaar — museum in Skopje.; Porta Macedonia is represented as Porta Macedonia — triumphal arch in Skopje, North Macedonia.; National Gallery of North Macedonia is represented as National Gallery of North Macedonia — museum in Macedonia.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / set retrieval",
+      "answer_type": "enumerated multi-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q12908756",
+          "label_en": "Museum of Skopje Old Bazaar",
+          "label_mk": "Музеј на Старата скопска чаршија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9C%D1%83%D0%B7%D0%B5%D1%98_%D0%BD%D0%B0_%D0%A1%D1%82%D0%B0%D1%80%D0%B0%D1%82%D0%B0_%D1%81%D0%BA%D0%BE%D0%BF%D1%81%D0%BA%D0%B0_%D1%87%D0%B0%D1%80%D1%88%D0%B8%D1%98%D0%B0"
+        },
+        {
+          "qid": "Q3078453",
+          "label_en": "Porta Macedonia",
+          "label_mk": "Порта Македонија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9F%D0%BE%D1%80%D1%82%D0%B0_%D0%9C%D0%B0%D0%BA%D0%B5%D0%B4%D0%BE%D0%BD%D0%B8%D1%98%D0%B0"
+        },
+        {
+          "qid": "Q3094685",
+          "label_en": "National Gallery of North Macedonia",
+          "label_mk": "Национална галерија на Македонија",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9D%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%B0%D0%BB%D0%BD%D0%B0_%D0%B3%D0%B0%D0%BB%D0%B5%D1%80%D0%B8%D1%98%D0%B0_%D0%BD%D0%B0_%D0%9C%D0%B0%D0%BA%D0%B5%D0%B4%D0%BE%D0%BD%D0%B8%D1%98%D0%B0"
+        }
+      ],
+      "evidence": [
+        "Museum of Skopje Old Bazaar — museum in Skopje.",
+        "Porta Macedonia — triumphal arch in Skopje, North Macedonia.",
+        "National Gallery of North Macedonia — museum in Macedonia."
+      ]
+    },
+    {
+      "id": "VZ-QA-099",
+      "question": "Name three Vezilka corpus entities with instance type научно списание and state the core fact for each.",
+      "ground_truth": "Journal of Special Education and Rehabilitation is represented as Journal of Special Education and Rehabilitation — journal.; Matematicki Bilten is represented as Matematicki Bilten — journal.; Mathematica Macedonica is represented as Mathematica Macedonica — journal.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / set retrieval",
+      "answer_type": "enumerated multi-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q17111911",
+          "label_en": "Journal of Special Education and Rehabilitation",
+          "label_mk": "Journal of Special Education and Rehabilitation",
+          "wikipedia_url": "https://en.wikipedia.org/wiki/Journal_of_Special_Education_and_Rehabilitation"
+        },
+        {
+          "qid": "Q15757400",
+          "label_en": "Matematicki Bilten",
+          "label_mk": "Matematicki Bilten",
+          "wikipedia_url": null
+        },
+        {
+          "qid": "Q15766118",
+          "label_en": "Mathematica Macedonica",
+          "label_mk": "Mathematica Macedonica",
+          "wikipedia_url": null
+        }
+      ],
+      "evidence": [
+        "Journal of Special Education and Rehabilitation — journal.",
+        "Matematicki Bilten — journal.",
+        "Mathematica Macedonica — journal."
+      ]
+    },
+    {
+      "id": "VZ-QA-100",
+      "question": "Name three Vezilka corpus entities with instance type паланка and state the core fact for each.",
+      "ground_truth": "Tetovo is represented as Tetovo — town and seat of Tetovo Municipality, North Macedonia.; Kruševo is represented as Kruševo — town and seat of Kruševo Municipality, Macedonia.; Gostivar is represented as Gostivar — town and seat of Gostivar Municipality, North Macedonia.",
+      "project": "vezilka_lightrag",
+      "query_type": "multi-hop / set retrieval",
+      "answer_type": "enumerated multi-entity answer",
+      "recommended_lightrag_modes": [
+        "global",
+        "hybrid",
+        "mix"
+      ],
+      "source_documents": [
+        {
+          "qid": "Q157024",
+          "label_en": "Tetovo",
+          "label_mk": "Тетово",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%A2%D0%B5%D1%82%D0%BE%D0%B2%D0%BE"
+        },
+        {
+          "qid": "Q157034",
+          "label_en": "Kruševo",
+          "label_mk": "Крушево",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%9A%D1%80%D1%83%D1%88%D0%B5%D0%B2%D0%BE"
+        },
+        {
+          "qid": "Q157058",
+          "label_en": "Gostivar",
+          "label_mk": "Гостивар",
+          "wikipedia_url": "https://mk.wikipedia.org/wiki/%D0%93%D0%BE%D1%81%D1%82%D0%B8%D0%B2%D0%B0%D1%80"
+        }
+      ],
+      "evidence": [
+        "Tetovo — town and seat of Tetovo Municipality, North Macedonia.",
+        "Kruševo — town and seat of Kruševo Municipality, Macedonia.",
+        "Gostivar — town and seat of Gostivar Municipality, North Macedonia."
+      ]
+    }
+  ]
+}

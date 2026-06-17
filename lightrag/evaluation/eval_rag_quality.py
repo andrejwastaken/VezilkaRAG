@@ -115,7 +115,12 @@ def _is_nan(value: Any) -> bool:
 class RAGEvaluator:
     """Evaluate RAG system quality using RAGAS metrics"""
 
-    def __init__(self, test_dataset_path: str = None, rag_api_url: str = None):
+    def __init__(
+        self,
+        test_dataset_path: str = None,
+        rag_api_url: str = None,
+        mode: str = None,
+    ):
         """
         Initialize evaluator with test dataset
 
@@ -217,8 +222,18 @@ class RAGEvaluator:
         if rag_api_url is None:
             rag_api_url = os.getenv("LIGHTRAG_API_URL", "http://localhost:9621")
 
+        if mode is None:
+            mode = os.getenv("EVAL_QUERY_MODE", "mix")
+        allowed_modes = {"local", "global", "hybrid", "naive", "mix", "bypass"}
+        if mode not in allowed_modes:
+            raise ValueError(
+                f"Unsupported query mode {mode!r}. Expected one of: "
+                f"{', '.join(sorted(allowed_modes))}"
+            )
+
         self.test_dataset_path = Path(test_dataset_path)
         self.rag_api_url = rag_api_url.rstrip("/")
+        self.mode = mode
         self.results_dir = Path(__file__).parent / "results"
         self.results_dir.mkdir(exist_ok=True)
 
@@ -275,6 +290,7 @@ class RAGEvaluator:
         logger.info("  • Total Test Cases:     %s", len(self.test_cases))
         logger.info("  • Test Dataset:         %s", self.test_dataset_path.name)
         logger.info("  • LightRAG API:         %s", self.rag_api_url)
+        logger.info("  • Query Mode:           %s", self.mode)
         logger.info("  • Results Directory:    %s", self.results_dir.name)
 
     def _load_test_dataset(self) -> List[Dict[str, str]]:
@@ -309,7 +325,7 @@ class RAGEvaluator:
         try:
             payload = {
                 "query": question,
-                "mode": "mix",
+                "mode": self.mode,
                 "include_references": True,
                 "include_chunk_content": True,  # NEW: Request chunk content in references
                 "response_type": "Multiple Paragraphs",
@@ -506,6 +522,9 @@ class RAGEvaluator:
                         if len(ground_truth) > 200
                         else ground_truth,
                         "project": test_case.get("project", "unknown"),
+                        "query_mode": self.mode,
+                        "query_type": test_case.get("query_type"),
+                        "answer_type": test_case.get("answer_type"),
                         "metrics": {
                             "faithfulness": float(scores_row.get("faithfulness", 0)),
                             "answer_relevance": float(
@@ -649,6 +668,9 @@ class RAGEvaluator:
                 "test_number",
                 "question",
                 "project",
+                "query_mode",
+                "query_type",
+                "answer_type",
                 "faithfulness",
                 "answer_relevance",
                 "context_recall",
@@ -668,6 +690,9 @@ class RAGEvaluator:
                         "test_number": idx,
                         "question": result.get("question", ""),
                         "project": result.get("project", "unknown"),
+                        "query_mode": result.get("query_mode", self.mode),
+                        "query_type": result.get("query_type", ""),
+                        "answer_type": result.get("answer_type", ""),
                         "faithfulness": f"{metrics.get('faithfulness', 0):.4f}",
                         "answer_relevance": f"{metrics.get('answer_relevance', 0):.4f}",
                         "context_recall": f"{metrics.get('context_recall', 0):.4f}",
@@ -882,6 +907,7 @@ class RAGEvaluator:
         # Save results
         summary = {
             "timestamp": datetime.now().isoformat(),
+            "query_mode": self.mode,
             "total_tests": len(results),
             "elapsed_time_seconds": round(elapsed_time, 2),
             "benchmark_stats": benchmark_stats,
@@ -954,6 +980,7 @@ async def main():
     Command-line arguments:
         --dataset, -d: Path to test dataset JSON file (default: sample_dataset.json)
         --ragendpoint, -r: LightRAG API endpoint URL (default: http://localhost:9621 or $LIGHTRAG_API_URL)
+        --mode, -m: LightRAG query mode (default: mix or $EVAL_QUERY_MODE)
 
     Usage:
         python lightrag/evaluation/eval_rag_quality.py
@@ -977,7 +1004,7 @@ Examples:
   python lightrag/evaluation/eval_rag_quality.py --ragendpoint http://my-server.com:9621
 
   # Specify both
-  python lightrag/evaluation/eval_rag_quality.py -d my_test.json -r http://localhost:9621
+  python lightrag/evaluation/eval_rag_quality.py -d my_test.json -r http://localhost:9621 -m naive
             """,
         )
 
@@ -997,6 +1024,15 @@ Examples:
             help="LightRAG API endpoint URL (default: http://localhost:9621 or $LIGHTRAG_API_URL environment variable)",
         )
 
+        parser.add_argument(
+            "--mode",
+            "-m",
+            type=str,
+            default=None,
+            choices=["local", "global", "hybrid", "naive", "mix", "bypass"],
+            help="LightRAG query mode to evaluate (default: mix or $EVAL_QUERY_MODE)",
+        )
+
         args = parser.parse_args()
 
         logger.info("%s", "=" * 70)
@@ -1004,7 +1040,9 @@ Examples:
         logger.info("%s", "=" * 70)
 
         evaluator = RAGEvaluator(
-            test_dataset_path=args.dataset, rag_api_url=args.ragendpoint
+            test_dataset_path=args.dataset,
+            rag_api_url=args.ragendpoint,
+            mode=args.mode,
         )
         await evaluator.run()
     except Exception as e:
