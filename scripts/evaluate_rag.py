@@ -582,7 +582,7 @@ def ensure_ragas_import_compat() -> None:
     sys.modules[module_name] = shim
 
 
-def run_ragas(rows: list[dict[str, Any]], output_dir: Path) -> str:
+def run_ragas(rows: list[dict[str, Any]], output_dir: Path, context_limit: int) -> str:
     if not rows:
         return "Skipped: no rows to evaluate."
     if not ragas_available():
@@ -665,11 +665,17 @@ def run_ragas(rows: list[dict[str, Any]], output_dir: Path) -> str:
         eval_llm = LangchainLLMWrapper(langchain_llm=base_llm)
     eval_embeddings = OpenAIEmbeddings(**embedding_kwargs)
 
+    def limited_contexts(row: dict[str, Any]) -> list[str]:
+        contexts = row.get("retrieved_contexts") or []
+        if context_limit > 0:
+            return contexts[:context_limit]
+        return contexts
+
     dataset = Dataset.from_dict(
         {
             "question": [row["question"] for row in rows],
             "answer": [row.get("generated_answer") or "" for row in rows],
-            "contexts": [row.get("retrieved_contexts") or [] for row in rows],
+            "contexts": [limited_contexts(row) for row in rows],
             "ground_truth": [row.get("expected_answer") or "" for row in rows],
         }
     )
@@ -690,7 +696,11 @@ def run_ragas(rows: list[dict[str, Any]], output_dir: Path) -> str:
         row["ragas_score"] = average_numbers(
             [row.get(metric_name) for metric_name in RAGAS_METRIC_NAMES]
         )
-    return f"Computed RAGAS metrics; raw scores written to {ragas_raw_path}."
+    return (
+        "Computed RAGAS metrics using "
+        f"top {context_limit} retrieved contexts per row; raw scores written to "
+        f"{ragas_raw_path}."
+    )
 
 
 def average_numbers(values: list[Any]) -> float | None:
@@ -1094,7 +1104,7 @@ async def evaluate(args: argparse.Namespace) -> dict[str, Path]:
     ragas_note = "Skipped by --skip-ragas."
     if not args.skip_ragas:
         try:
-            ragas_note = run_ragas(all_rows, output_dir)
+            ragas_note = run_ragas(all_rows, output_dir, args.k)
         except Exception as exc:
             ragas_note = (
                 f"Failed: {type(exc).__name__}: {exc}. "
