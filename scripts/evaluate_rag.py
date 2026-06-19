@@ -153,6 +153,26 @@ def normalize_source_ids(item: dict[str, Any]) -> list[str]:
     return sorted(set(source_ids))
 
 
+def normalize_expected_entities(item: dict[str, Any]) -> list[str]:
+    entities: list[str] = []
+    for key in ("expected_entities", "entities", "ground_truth_entities"):
+        value = item.get(key)
+        if isinstance(value, str):
+            entities.extend(part.strip() for part in value.split(",") if part.strip())
+        elif isinstance(value, list):
+            entities.extend(clean_text(v) for v in value if clean_text(v))
+
+    for source in item.get("source_documents") or item.get("sources") or []:
+        if not isinstance(source, dict):
+            continue
+        for key in ("qid", "label_en", "label_mk", "title", "name"):
+            value = clean_text(source.get(key))
+            if value:
+                entities.append(value)
+
+    return sorted(set(entities))
+
+
 def normalize_contexts(item: dict[str, Any]) -> list[str]:
     contexts: list[str] = []
     for key in (
@@ -214,11 +234,7 @@ def load_dataset(path: Path, limit: int | None = None) -> list[QACase]:
                 expected_answer=clean_text(expected),
                 source_ids=normalize_source_ids(item),
                 ground_truth_contexts=normalize_contexts(item),
-                expected_entities=[
-                    clean_text(v)
-                    for v in item.get("expected_entities", [])
-                    if clean_text(v)
-                ],
+                expected_entities=normalize_expected_entities(item),
                 recommended_modes=list(item.get("recommended_lightrag_modes") or []),
                 metadata={
                     k: v
@@ -284,6 +300,59 @@ def context_identifier_matches(identifier: str, relevant_ids: set[str]) -> bool:
     return any(rel and rel in identifier for rel in relevant_ids)
 
 
+def compact_graph_entity(entity: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: clean_text(entity.get(key))
+        for key in (
+            "entity_name",
+            "entity_type",
+            "description",
+            "source_id",
+            "reference_id",
+            "file_path",
+        )
+        if clean_text(entity.get(key))
+    }
+
+
+def compact_graph_relationship(relationship: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: clean_text(relationship.get(key))
+        for key in (
+            "src_id",
+            "tgt_id",
+            "description",
+            "keywords",
+            "source_id",
+            "reference_id",
+            "file_path",
+        )
+        if clean_text(relationship.get(key))
+    }
+
+
+def graph_record_text(records: list[dict[str, Any]]) -> str:
+    parts: list[str] = []
+    for record in records:
+        parts.extend(clean_text(value) for value in record.values() if clean_text(value))
+    return " ".join(parts).casefold()
+
+
+def expected_entity_coverage(
+    expected_entities: list[str],
+    retrieved_text: str,
+) -> float | None:
+    if not expected_entities:
+        return None
+    normalized_text = retrieved_text.casefold()
+    hits = sum(
+        1
+        for entity in expected_entities
+        if clean_text(entity) and clean_text(entity).casefold() in normalized_text
+    )
+    return hits / len(expected_entities)
+
+
 def dcg(relevances: list[int]) -> float:
     return sum(rel / math.log2(idx + 2) for idx, rel in enumerate(relevances))
 
@@ -346,6 +415,8 @@ def extract_contexts_from_data(data: dict[str, Any]) -> tuple[list[str], list[st
         "graph_average_depth_hops": None,
         "graph_coverage": None,
         "entity_recall": None,
+        "retrieved_graph_entities": [],
+        "retrieved_graph_relationships": [],
         "graph_metrics_note": "",
     }
 
@@ -364,6 +435,14 @@ def extract_contexts_from_data(data: dict[str, Any]) -> tuple[list[str], list[st
     relationships = data.get("relationships") or []
     graph["graph_nodes_retrieved"] = len(entities)
     graph["graph_edges_traversed"] = len(relationships)
+    graph["retrieved_graph_entities"] = [
+        compact_graph_entity(entity) for entity in entities if isinstance(entity, dict)
+    ]
+    graph["retrieved_graph_relationships"] = [
+        compact_graph_relationship(relationship)
+        for relationship in relationships
+        if isinstance(relationship, dict)
+    ]
 
     for entity in entities:
         text = " ".join(
@@ -407,10 +486,11 @@ def extract_contexts_from_data(data: dict[str, Any]) -> tuple[list[str], list[st
             ids.append(identifier)
 
     graph["graph_metrics_note"] = (
-        "LightRAG /query/data exposes entity and relationship counts, but not "
-        "traversal depth/hops or complete graph coverage. To compute depth, "
-        "return traversal path metadata. To compute graph/entity recall, add "
-        "ground-truth expected graph nodes/entities to the QA dataset."
+        "LightRAG /query/data exposes final graph entities and relationships, "
+        "so entity recall and graph coverage can be computed against expected "
+        "source-document entities. Average depth/hops remains unavailable until "
+        "LightRAG returns traversal path metadata such as seed entities, node "
+        "depths, edge depths, and query-to-node paths."
     )
     return contexts, ids, graph
 
@@ -502,6 +582,8 @@ async def run_case_mode(
                 "graph_average_depth_hops": None,
                 "graph_coverage": None,
                 "entity_recall": None,
+                "retrieved_graph_entities": [],
+                "retrieved_graph_relationships": [],
                 "graph_metrics_note": "",
             }
             if data_response.get("status") == "success":
@@ -537,6 +619,8 @@ def add_local_metrics(row: dict[str, Any], case: QACase, k: int) -> None:
     expected = case.expected_answer
     contexts = row.get("retrieved_contexts") or []
     retrieved_ids = row.get("retrieved_context_ids") or []
+    graph_entities = row.get("retrieved_graph_entities") or []
+    graph_relationships = row.get("retrieved_graph_relationships") or []
 
     row["exact_match"] = exact_match(expected, generated)
     row["token_f1"] = token_f1(expected, generated)
@@ -550,9 +634,23 @@ def add_local_metrics(row: dict[str, Any], case: QACase, k: int) -> None:
     row["empty_retrieval"] = float(len(contexts) == 0)
     row.update(compute_retrieval_metrics(case, retrieved_ids, k))
     if case.expected_entities:
-        retrieved_text = " ".join(contexts + retrieved_ids).casefold()
-        entity_hits = sum(1 for entity in case.expected_entities if entity.casefold() in retrieved_text)
-        row["entity_recall"] = entity_hits / len(case.expected_entities)
+        retrieved_text = " ".join(
+            contexts
+            + retrieved_ids
+            + [graph_record_text(graph_entities)]
+            + [graph_record_text(graph_relationships)]
+        )
+        row["entity_recall"] = expected_entity_coverage(
+            case.expected_entities,
+            retrieved_text,
+        )
+        if graph_entities:
+            row["graph_coverage"] = expected_entity_coverage(
+                case.expected_entities,
+                graph_record_text(graph_entities),
+            )
+        elif row.get("graph_coverage") is None:
+            row["graph_coverage"] = None
     elif row.get("entity_recall") is None:
         row["entity_recall"] = None
 
@@ -582,7 +680,17 @@ def ensure_ragas_import_compat() -> None:
     sys.modules[module_name] = shim
 
 
-def run_ragas(rows: list[dict[str, Any]], output_dir: Path, context_limit: int) -> str:
+def run_ragas(
+    rows: list[dict[str, Any]],
+    output_dir: Path,
+    context_limit: int,
+    context_chars: int,
+    batch_size: int,
+    timeout: int,
+    max_workers: int,
+    max_retries: int,
+    retry_failed: int,
+) -> str:
     if not rows:
         return "Skipped: no rows to evaluate."
     if not ragas_available():
@@ -614,6 +722,7 @@ def run_ragas(rows: list[dict[str, Any]], output_dir: Path, context_limit: int) 
             ContextRecall,
             Faithfulness,
         )
+        from ragas.run_config import RunConfig
     except ImportError as exc:
         return f"Skipped: missing RAGAS evaluation dependency: {exc}."
 
@@ -668,38 +777,148 @@ def run_ragas(rows: list[dict[str, Any]], output_dir: Path, context_limit: int) 
     def limited_contexts(row: dict[str, Any]) -> list[str]:
         contexts = row.get("retrieved_contexts") or []
         if context_limit > 0:
-            return contexts[:context_limit]
+            contexts = contexts[:context_limit]
+        if context_chars > 0:
+            contexts = [context[:context_chars] for context in contexts]
         return contexts
 
-    dataset = Dataset.from_dict(
-        {
-            "question": [row["question"] for row in rows],
-            "answer": [row.get("generated_answer") or "" for row in rows],
-            "contexts": [limited_contexts(row) for row in rows],
-            "ground_truth": [row.get("expected_answer") or "" for row in rows],
-        }
+    run_config = RunConfig(
+        timeout=timeout,
+        max_retries=max_retries,
+        max_workers=max_workers,
     )
-    eval_result = evaluate(
-        dataset=dataset,
-        metrics=metrics,
-        llm=eval_llm,
-        embeddings=eval_embeddings,
-    )
-    df = eval_result.to_pandas()
-    ragas_raw_path = output_dir / "ragas_raw_scores.csv"
-    df.to_csv(ragas_raw_path, index=False)
 
-    for idx, row in enumerate(rows):
-        scores = df.iloc[idx].to_dict()
-        for metric_name in RAGAS_METRIC_NAMES:
-            row[metric_name] = safe_float(scores.get(metric_name))
-        row["ragas_score"] = average_numbers(
-            [row.get(metric_name) for metric_name in RAGAS_METRIC_NAMES]
+    ragas_raw_path = output_dir / "ragas_raw_scores.csv"
+    raw_score_rows: list[dict[str, Any]] = []
+    row_batches = [
+        rows[index : index + batch_size] for index in range(0, len(rows), batch_size)
+    ]
+
+    for batch_number, batch_rows in enumerate(row_batches, 1):
+        print(
+            f"RAGAS batch {batch_number}/{len(row_batches)} "
+            f"({len(batch_rows)} row(s), max_workers={max_workers})",
+            flush=True,
         )
+        dataset = Dataset.from_dict(
+            {
+                "question": [row["question"] for row in batch_rows],
+                "answer": [row.get("generated_answer") or "" for row in batch_rows],
+                "contexts": [limited_contexts(row) for row in batch_rows],
+                "ground_truth": [row.get("expected_answer") or "" for row in batch_rows],
+            }
+        )
+        eval_result = evaluate(
+            dataset=dataset,
+            metrics=metrics,
+            llm=eval_llm,
+            embeddings=eval_embeddings,
+            run_config=run_config,
+            batch_size=batch_size,
+            raise_exceptions=False,
+            show_progress=False,
+        )
+        df = eval_result.to_pandas()
+        for batch_idx, row in enumerate(batch_rows):
+            scores = df.iloc[batch_idx].to_dict()
+            row_scores = {
+                "case_id": row.get("case_id"),
+                "system_type": row.get("system_type"),
+                "mode": row.get("mode"),
+                "question": row.get("question"),
+            }
+            missing_metrics: list[str] = []
+            for metric_name in RAGAS_METRIC_NAMES:
+                score = safe_float(scores.get(metric_name))
+                row[metric_name] = score
+                row_scores[metric_name] = score
+                if score is None:
+                    missing_metrics.append(metric_name)
+            row["ragas_score"] = average_numbers(
+                [row.get(metric_name) for metric_name in RAGAS_METRIC_NAMES]
+            )
+            row_scores["ragas_score"] = row["ragas_score"]
+            row_scores["ragas_missing_metrics"] = ",".join(missing_metrics)
+            raw_score_rows.append(row_scores)
+
+        write_csv(
+            ragas_raw_path,
+            raw_score_rows,
+            [
+                "case_id",
+                "system_type",
+                "mode",
+                "question",
+                *RAGAS_METRIC_NAMES,
+                "ragas_score",
+                "ragas_missing_metrics",
+            ],
+        )
+
+    for attempt in range(1, retry_failed + 1):
+        failed_rows = [
+            row
+            for row in rows
+            if any(row.get(metric_name) is None for metric_name in RAGAS_METRIC_NAMES)
+        ]
+        if not failed_rows:
+            break
+        print(
+            f"Retrying {len(failed_rows)} RAGAS row(s), attempt {attempt}/{retry_failed}",
+            flush=True,
+        )
+        retry_note = run_ragas(
+            failed_rows,
+            output_dir,
+            context_limit,
+            context_chars,
+            1,
+            timeout,
+            1,
+            max_retries,
+            0,
+        )
+        print(retry_note, flush=True)
+
+    raw_score_rows = []
+    missing_metric_count = 0
+    for row in rows:
+        missing_metrics = [
+            metric_name
+            for metric_name in RAGAS_METRIC_NAMES
+            if row.get(metric_name) is None
+        ]
+        missing_metric_count += len(missing_metrics)
+        raw_score_rows.append(
+            {
+                "case_id": row.get("case_id"),
+                "system_type": row.get("system_type"),
+                "mode": row.get("mode"),
+                "question": row.get("question"),
+                **{metric_name: row.get(metric_name) for metric_name in RAGAS_METRIC_NAMES},
+                "ragas_score": row.get("ragas_score"),
+                "ragas_missing_metrics": ",".join(missing_metrics),
+            }
+        )
+    write_csv(
+        ragas_raw_path,
+        raw_score_rows,
+        [
+            "case_id",
+            "system_type",
+            "mode",
+            "question",
+            *RAGAS_METRIC_NAMES,
+            "ragas_score",
+            "ragas_missing_metrics",
+        ],
+    )
     return (
         "Computed RAGAS metrics using "
-        f"top {context_limit} retrieved contexts per row; raw scores written to "
-        f"{ragas_raw_path}."
+        f"top {context_limit} retrieved contexts per row, "
+        f"{context_chars} chars/context, batch_size={batch_size}, "
+        f"max_workers={max_workers}; raw scores written to {ragas_raw_path}. "
+        f"Missing metric values: {missing_metric_count}."
     )
 
 
@@ -721,7 +940,12 @@ def write_csv(path: Path, rows: list[dict[str, Any]], fieldnames: list[str]) -> 
         writer.writeheader()
         for row in rows:
             serializable = dict(row)
-            for key in ("retrieved_contexts", "retrieved_context_ids"):
+            for key in (
+                "retrieved_contexts",
+                "retrieved_context_ids",
+                "retrieved_graph_entities",
+                "retrieved_graph_relationships",
+            ):
                 serializable[key] = json.dumps(serializable.get(key, []), ensure_ascii=False)
             writer.writerow(serializable)
 
@@ -854,7 +1078,7 @@ def create_report(
         "- Retrieval: Precision@K, Recall@K, MRR, NDCG@K when ground-truth source ids exist; average retrieved chunks and empty retrieval rate always run.",
         "- Generation: exact match, token-level F1, lexical semantic similarity fallback. LLM judge correctness is TODO unless an evaluator judge is configured.",
         "- System: average latency, median latency, total time, failures, token estimate.",
-        "- Graph: exposed entity/relationship counts are recorded. Depth/hops, graph coverage, and full entity recall require traversal metadata and ground-truth graph entities.",
+        "- Graph: returned graph entities and relationships are recorded. Entity recall and graph coverage are computed from expected source-document entities when available. Depth/hops require LightRAG traversal path metadata.",
         "",
         f"RAGAS status: {ragas_note}",
         "",
@@ -900,7 +1124,7 @@ def create_report(
             "- Precision@K/Recall@K/MRR/NDCG@K require source ids in the QA data and comparable ids in retrieved contexts.",
             "- Token usage is estimated unless the LightRAG API returns provider usage metadata.",
             "- Judge-based correctness is not computed unless an LLM judge is explicitly added.",
-            "- Graph depth/hops and graph coverage need LightRAG to return traversal paths and ground-truth graph nodes/entities in the dataset.",
+            "- Graph depth/hops need LightRAG to return traversal paths, seed entities, and hop distances for retrieved graph nodes.",
             "",
             "## Output Files",
             "",
@@ -947,6 +1171,8 @@ LONG_FIELDS = [
     "generated_answer",
     "retrieved_contexts",
     "retrieved_context_ids",
+    "retrieved_graph_entities",
+    "retrieved_graph_relationships",
     "system_type",
     "mode",
     "latency_seconds",
@@ -960,6 +1186,7 @@ LONG_FIELDS = [
     "answer_correctness",
     "answer_similarity",
     "ragas_score",
+    "ragas_missing_metrics",
     "precision_at_k",
     "recall_at_k",
     "mrr",
@@ -1055,6 +1282,8 @@ async def evaluate(args: argparse.Namespace) -> dict[str, Path]:
         if not isinstance(loaded_rows, list):
             raise ValueError(f"--from-results must point to a JSON list: {results_path}")
         all_rows = [row for row in loaded_rows if isinstance(row, dict)]
+        if args.limit is not None:
+            all_rows = all_rows[: args.limit]
         print(f"Loaded {len(all_rows)} rows from {results_path}")
     else:
         for idx, case in enumerate(cases, 1):
@@ -1104,7 +1333,17 @@ async def evaluate(args: argparse.Namespace) -> dict[str, Path]:
     ragas_note = "Skipped by --skip-ragas."
     if not args.skip_ragas:
         try:
-            ragas_note = run_ragas(all_rows, output_dir, args.k)
+            ragas_note = run_ragas(
+                all_rows,
+                output_dir,
+                args.k,
+                args.ragas_context_chars,
+                args.ragas_batch_size,
+                args.ragas_timeout,
+                args.ragas_max_workers,
+                args.ragas_max_retries,
+                args.ragas_retry_failed,
+            )
         except Exception as exc:
             ragas_note = (
                 f"Failed: {type(exc).__name__}: {exc}. "
@@ -1191,11 +1430,57 @@ def build_parser() -> argparse.ArgumentParser:
             "without querying the LightRAG API again."
         ),
     )
+    parser.add_argument(
+        "--ragas-batch-size",
+        type=int,
+        default=1,
+        help="Rows per RAGAS evaluate() call. Keep low to avoid evaluator timeouts.",
+    )
+    parser.add_argument(
+        "--ragas-max-workers",
+        type=int,
+        default=1,
+        help="Maximum concurrent RAGAS metric jobs.",
+    )
+    parser.add_argument(
+        "--ragas-timeout",
+        type=int,
+        default=300,
+        help="RAGAS per-job timeout in seconds.",
+    )
+    parser.add_argument(
+        "--ragas-max-retries",
+        type=int,
+        default=3,
+        help="RAGAS provider retry count per metric job.",
+    )
+    parser.add_argument(
+        "--ragas-retry-failed",
+        type=int,
+        default=1,
+        help="Retry rows with missing RAGAS metrics after the first pass.",
+    )
+    parser.add_argument(
+        "--ragas-context-chars",
+        type=int,
+        default=1200,
+        help="Maximum characters per retrieved context sent to RAGAS. Use 0 for no truncation.",
+    )
     return parser
 
 
 def main() -> None:
     args = build_parser().parse_args()
+    if args.ragas_batch_size < 1:
+        raise SystemExit("--ragas-batch-size must be >= 1")
+    if args.ragas_max_workers < 1:
+        raise SystemExit("--ragas-max-workers must be >= 1")
+    if args.ragas_timeout < 1:
+        raise SystemExit("--ragas-timeout must be >= 1")
+    if args.ragas_max_retries < 0:
+        raise SystemExit("--ragas-max-retries must be >= 0")
+    if args.ragas_retry_failed < 0:
+        raise SystemExit("--ragas-retry-failed must be >= 0")
     started_at = datetime.now().isoformat()
     print(f"Starting RAG evaluation at {started_at}")
     try:
